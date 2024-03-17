@@ -16,9 +16,12 @@
 #include "utils/VulkanBufferUtils.h"
 #include "utils/VkDebugUtils.h"
 
-VulkanRenderContext::VulkanRenderContext(): window(nullptr), debugMessenger(nullptr), surface(nullptr), device(nullptr),
+VulkanRenderContext::VulkanRenderContext(): window(nullptr), surface(nullptr), device(nullptr),
                                             renderPass(nullptr),
                                             commandPool(nullptr){
+}
+
+VulkanRenderContext::~VulkanRenderContext() {
 }
 
 void VulkanRenderContext::initWindow() {
@@ -361,8 +364,4 @@ void VulkanRenderContext::run() {
     initVulkan();
     mainLoop();
     cleanup();
-}
-
-
-void VulkanRenderContext::createUniformBuffers() {
 }

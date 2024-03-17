@@ -22,7 +22,8 @@ class VulkanDescriptor {
         VkDescriptorType m_type;
         uint32_t m_binding;
         VkShaderStageFlags m_stageFlags;
-        // Additional details like buffer or image view references can be added here
+
+        //TODO Additional details like buffer or image view references can be added here
 };
 
 

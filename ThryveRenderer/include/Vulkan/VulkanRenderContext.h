@@ -27,7 +27,7 @@ constexpr uint32_t HEIGHT = 1080;
 
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
-const std::vector<const char*> deviceExtensions = {
+const std::vector<const char *> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
@@ -51,87 +51,84 @@ const std::vector<uint32_t> indices = {
 class VulkanRenderContext final : public IGraphicsContext {
 public:
     VulkanRenderContext();
-    ~VulkanRenderContext() override = default;
+    ~VulkanRenderContext();
 
     void run() override;
 
 private:
-    std::unique_ptr<VulkanWindowContext> m_WindowContext;
-    std::unique_ptr<VulkanInstance> m_Instance;
-    std::unique_ptr<VulkanDeviceSelector> m_DeviceSelector;
-    std::unique_ptr<VulkanSwapChain> m_SwapChain;
-    std::unique_ptr<VulkanRenderPassBuilder> m_RenderPassFactory;
-    std::unique_ptr<VulkanPipeline> m_Pipeline;
-    std::unique_ptr<VulkanCommandPoolManager> m_CmdPoolManager;
-    std::unique_ptr<VulkanCommandBuffer> m_CmdBuffer;
-    std::unique_ptr<VulkanFrameSynchronizer> m_FrameSynchronizer;
-    std::unique_ptr<VulkanVertexBuffer<Vertex2D>> m_VulkanVertexBuffer;
-    std::unique_ptr<VulkanIndexBuffer> m_IndexBuffer;
-    std::unique_ptr<VulkanDescriptorManager> m_descriptorManager;
-
-    std::vector<VkDescriptorSet> m_descriptorSets;
-
-    void createUniformBuffers();
-
-    VkDescriptorBufferInfo m_DescriptorbBufferInfo;
-
+    // Window management
     GLFWwindow* window;
+    std::unique_ptr<VulkanWindowContext> m_WindowContext;
 
-    VkDebugUtilsMessengerEXT debugMessenger;
+    // Vulkan core components
+    std::unique_ptr<VulkanInstance> m_Instance;
     VkSurfaceKHR surface;
-
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    std::unique_ptr<VulkanDeviceSelector> m_DeviceSelector;
     VkDevice device;
 
+    // Swap chain and rendering setup
+    std::unique_ptr<VulkanSwapChain> m_SwapChain;
     VkRenderPass renderPass;
-    VkCommandPool commandPool;
-
-    VkDescriptorSetLayout m_descriptorSetLayout;
-
+    std::unique_ptr<VulkanRenderPassBuilder> m_RenderPassFactory;
+    std::unique_ptr<VulkanPipeline> m_Pipeline;
     VkFramebuffer framebuffer;
 
+    // Command processing
+    VkCommandPool commandPool;
+    std::unique_ptr<VulkanCommandPoolManager> m_CmdPoolManager;
     VkCommandBuffer commandBuffer;
+    std::unique_ptr<VulkanCommandBuffer> m_CmdBuffer;
 
-    uint32_t currentFrame = 0;
+    // Buffers, vertices, and indices
+    std::unique_ptr<VulkanVertexBuffer<Vertex2D>> m_VulkanVertexBuffer;
+    std::unique_ptr<VulkanIndexBuffer> m_IndexBuffer;
 
+    // Descriptor sets and buffers
+    VkDescriptorSetLayout m_descriptorSetLayout;
     VkDescriptorPool m_descriptorPool;
-
+    std::vector<VkDescriptorSet> m_descriptorSets;
     std::vector<VkBuffer> m_uniformBuffers;
     std::vector<VkDeviceMemory> m_uniformBuffersMemory;
     std::vector<void*> m_uniformBuffersMapped;
+    std::unique_ptr<VulkanDescriptorManager> m_descriptorManager;
 
-    void initInstance();
+    // Synchronization
+    std::unique_ptr<VulkanFrameSynchronizer> m_FrameSynchronizer;
+    uint32_t currentFrame = 0;
+
+    // Initialization and setup methods
+    void initWindow();
+    void initVulkan();
+    void createSurface();
     void pickSuitableDevices();
+    void initInstance();
     void createSwapChain();
     void initRenderPassFactory();
+    void createGraphicsPipeline();
     void createFramebuffers();
     void createCommandPool();
     void initCmdBufferManager();
-
-    [[nodiscard]] VkDescriptorPool createDescriptorPool() const;
-
-    void CreateDescriptorSets();
-
-    void createDescriptorSetLayout();
-
-    void createTextureImage();
-
-    void initVulkan();
-    void createSurface();
-    void createGraphicsPipeline();
     void createVertexBuffer();
     void createIndexBuffer();
     void createUniformBuffer();
+    void createDescriptorSetLayout();
+    void createTextureImage();
+    VkDescriptorPool createDescriptorPool() const;
+    void CreateDescriptorSets();
     void createCommandBuffer();
+
 
     void recordCommandBufferSegment(VkCommandBuffer commandBuffer, uint32_t imageIndex) const;
 
-    void createSyncObjects();
-
-    void updateUniformBuffer(uint32_t currentImage) const;
-
-    void initWindow();
+    // Main loop and frame drawing
     void mainLoop();
     void drawFrame();
+    void updateUniformBuffer(uint32_t currentImage) const;
+
+    // Synchronization methods
+    void createSyncObjects();
+
+    // Cleanup
     void cleanup();
 };
