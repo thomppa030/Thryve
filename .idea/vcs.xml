@@ -2,10 +2,10 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/ThryveRenderer/external/glfw" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/ThryveRenderer/external/glm" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/ThryveRenderer/external/stb" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/Catch2" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/glfw" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/imgui" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/spdlog" vcs="Git" />
   </component>

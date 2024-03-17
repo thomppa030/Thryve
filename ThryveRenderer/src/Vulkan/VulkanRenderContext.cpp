@@ -9,6 +9,7 @@
 #include "stb_image.h"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "Vulkan/VulkanUniformBuffer.h"
+#include "Config.h"
 #include "Vulkan/VulkanDescriptorManager.h"
 #include "Vulkan/VulkanDescriptorSetBuilder.h"
 #include "Vulkan/VulkanDeviceSelector.h"
@@ -134,7 +135,7 @@ void VulkanRenderContext::createDescriptorSetLayout() {
 
 void VulkanRenderContext::createTextureImage() {
     int texWidth, texHeight, texChannels;
-    const stbi_uc* pixels = stbi_load("R:/Thryve/ThryveRenderer/resources/statue.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    const stbi_uc* pixels = stbi_load((std::string(RESOURCE_DIR)+"/statue.jpg").c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     VkDeviceSize imageSize = texWidth * texHeight * 4;
 
     if (!pixels) {
@@ -218,8 +219,8 @@ void VulkanRenderContext::createGraphicsPipeline() {
 
     m_Pipeline = std::make_unique<VulkanPipeline>(device, renderPass);
 
-    const auto vertexShaderPath = "R:/Thryve/ThryveRenderer/shaders/SPIRV/triangle.vert.spv";
-    const auto fragmentShaderPath = "R:/Thryve/ThryveRenderer/shaders/SPIRV/triangle.frag.spv";
+    const auto vertexShaderPath = std::string(SHADERS_DIR)+"/SPIRV/triangle.vert.spv";
+    const auto fragmentShaderPath = std::string(SHADERS_DIR)+"/SPIRV/triangle.frag.spv";
 
     m_Pipeline->CreatePipeline(vertexShaderPath, fragmentShaderPath, configInfo);
 }

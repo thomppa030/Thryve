@@ -5,6 +5,17 @@ set(CMAKE_CXX_STANDARD 20)
 
 find_package(Vulkan REQUIRED)
 
+include_directories(config)
+
+# Define the path to the shaders directory relative to this CMakeLists.txt
+set(SHADERS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThryveRenderer/shaders")
+set(RESOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThryveRenderer/resources")
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config/Config.h.in ${CMAKE_BINARY_DIR}/generated/Config.h)
+
+include_directories(${CMAKE_BINARY_DIR}/generated)
+
+
 add_subdirectory(external/glfw)
 add_subdirectory(external/spdlog)
 include_directories(external/spdlog/include)

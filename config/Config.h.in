@@ -1,0 +1,4 @@
+// Config.h.in
+#define SHADERS_DIR "@SHADERS_DIR@"
+#define RESOURCE_DIR "@RESOURCE_DIR@"
+

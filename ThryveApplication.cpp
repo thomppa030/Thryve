@@ -1,8 +1,6 @@
 //
 // Created by kprie on 15.03.2024.
 //
-#pragma once
-
 #include "ThryveApplication.h"
 
 ThryveApplication::ThryveApplication() {
