@@ -121,13 +121,6 @@ void VulkanRenderContext::createDescriptorSetLayout() {
 }
 
 void VulkanRenderContext::createTextureImage() {
-    int texWidth, texHeight, texChannels;
-    const stbi_uc* pixels = stbi_load((std::string(RESOURCE_DIR)+"/statue.jpg").c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-    VkDeviceSize imageSize = texWidth * texHeight * 4;
-
-    if (!pixels) {
-        throw std::runtime_error("failed to load texture image!");
-    }
 }
 
 void VulkanRenderContext::initVulkan() {
