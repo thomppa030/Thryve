@@ -1,0 +1,18 @@
+[submodule "external/spdlog"]
+	path = external/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "external/Catch2"]
+	path = external/Catch2
+	url = https://github.com/catchorg/Catch2.git
+[submodule "ThryveRenderer/external/glm"]
+	path = ThryveRenderer/external/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "ThryveRenderer/external/stb"]
+	path = ThryveRenderer/external/stb
+	url = https://github.com/nothings/stb.git
+[submodule "external/imgui"]
+	path = external/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "external/glfw"]
+	path = external/glfw
+	url = https://github.com/glfw/glfw.git
