@@ -24,7 +24,6 @@ void VulkanDescriptorManager::createDescriptorSetLayout(const std::vector<Vulkan
 }
 
 void VulkanDescriptorManager::allocateDescriptorSets(uint32_t setCount) {
-
     std::vector<VkDescriptorSetLayout> layouts(setCount, m_descriptorSetLayout);
     VkDescriptorSetAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;

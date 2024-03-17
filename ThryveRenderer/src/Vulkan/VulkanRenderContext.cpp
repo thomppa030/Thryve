@@ -86,15 +86,9 @@ VkDescriptorPool VulkanRenderContext::createDescriptorPool() const {
 }
 
 void VulkanRenderContext::CreateDescriptorSets() {
-    std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, m_descriptorSetLayout);
-    VkDescriptorSetAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfo.descriptorPool = m_descriptorPool;
-    allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-    allocInfo.pSetLayouts = layouts.data();
 
-    m_descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-    VK_CALL(vkAllocateDescriptorSets(device, &allocInfo, m_descriptorSets.data()));
+    m_descriptorManager->allocateDescriptorSets(MAX_FRAMES_IN_FLIGHT);
+    m_descriptorSets = m_descriptorManager->getDescriptorSets();
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         VkDescriptorBufferInfo bufferInfo{};
@@ -117,20 +111,10 @@ void VulkanRenderContext::CreateDescriptorSets() {
 }
 
 void VulkanRenderContext::createDescriptorSetLayout() {
-    VkDescriptorSetLayoutBinding uboLayoutBinding{};
-    uboLayoutBinding.binding = 0;
-    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uboLayoutBinding.descriptorCount = 1;
-    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
-
-
-    VkDescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &uboLayoutBinding;
-
-    VK_CALL(vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &m_descriptorSetLayout));
+    //TODO Either Refactor From DescriptorSetManager or make static, needs the Manager instantiated too early at the moment
+    VulkanDescriptor uboDescriptor(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0, VK_SHADER_STAGE_VERTEX_BIT);
+    m_descriptorManager->createDescriptorSetLayout({uboDescriptor});
+    m_descriptorSetLayout = m_descriptorManager->getDescriptorSetLayout();
 }
 
 void VulkanRenderContext::createTextureImage() {
@@ -153,6 +137,8 @@ void VulkanRenderContext::initVulkan() {
     renderPass = m_RenderPassFactory->GetRenderPass("default")->GetRenderPass();
     m_SwapChain->SetRenderPass(renderPass);
 
+    m_descriptorPool = createDescriptorPool();
+    m_descriptorManager = std::make_unique<VulkanDescriptorManager>(device, m_descriptorPool);
     createDescriptorSetLayout();
     createGraphicsPipeline();
     createFramebuffers();
@@ -161,7 +147,6 @@ void VulkanRenderContext::initVulkan() {
     createVertexBuffer();
     createIndexBuffer();
     createUniformBuffer();
-    m_descriptorPool = createDescriptorPool();
     CreateDescriptorSets();
     initCmdBufferManager();
     createCommandBuffer();

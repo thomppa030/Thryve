@@ -9,6 +9,7 @@
 #include "Vertex2D.h"
 #include "VulkanCommandBuffer.h"
 #include "VulkanCommandPoolManager.h"
+#include "VulkanDescriptorManager.h"
 #include "VulkanInstance.h"
 #include "VulkanDeviceSelector.h"
 #include "VulkanIndexBuffer.h"
@@ -66,6 +67,7 @@ private:
     std::unique_ptr<VulkanFrameSynchronizer> m_FrameSynchronizer;
     std::unique_ptr<VulkanVertexBuffer<Vertex2D>> m_VulkanVertexBuffer;
     std::unique_ptr<VulkanIndexBuffer> m_IndexBuffer;
+    std::unique_ptr<VulkanDescriptorManager> m_descriptorManager;
 
     std::vector<VkDescriptorSet> m_descriptorSets;
 

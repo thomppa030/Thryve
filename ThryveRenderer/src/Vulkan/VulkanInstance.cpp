@@ -26,7 +26,7 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
     }
 }
 
-VulkanInstance::VulkanInstance() : m_enableValidationLayers(false), debugMessenger(nullptr) {
+VulkanInstance::VulkanInstance() : m_enableValidationLayers(true), debugMessenger(nullptr) {
     m_validationLayers = {"VK_LAYER_KHRONOS_validation"};
 }
 
