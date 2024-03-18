@@ -26,8 +26,8 @@ VkCommandBuffer VulkanCommandBuffer::Allocate(bool bBegingRecording) {
     return commandBuffer;
 }
 
-void VulkanCommandBuffer::Begin(VkCommandBuffer commandBuffer
-                                                    , VkCommandBufferUsageFlags usageFlags) {
+void VulkanCommandBuffer::Begin(const VkCommandBuffer commandBuffer
+                                , const VkCommandBufferUsageFlags usageFlags) const {
     std::lock_guard<std::mutex> lock(m_mutex);
 
     VkCommandBufferBeginInfo beginInfo{};
@@ -37,14 +37,14 @@ void VulkanCommandBuffer::Begin(VkCommandBuffer commandBuffer
     VK_CALL(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 }
 
-void VulkanCommandBuffer::End(VkCommandBuffer commandBuffer) {
+void VulkanCommandBuffer::End(const VkCommandBuffer commandBuffer) const {
     std::lock_guard<std::mutex> lock(m_mutex);
 
     VK_CALL(vkEndCommandBuffer(commandBuffer));
 }
 
-void VulkanCommandBuffer::Submit(VkCommandBuffer commandBuffer, VkQueue queue
-    , bool waitForCompletion){
+void VulkanCommandBuffer::Submit(const VkCommandBuffer commandBuffer, const VkQueue queue
+                                 , const bool waitForCompletion) const {
     std::lock_guard<std::mutex> lock(m_mutex);
 
     VkSubmitInfo submitInfo{};

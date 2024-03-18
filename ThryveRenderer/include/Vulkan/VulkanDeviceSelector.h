@@ -9,21 +9,21 @@
 
 
 struct QueueFamilyIndices {
-    std::optional<uint32_t> graphicsFamily;
-    std::optional<uint32_t> presentFamily;
+    std::optional<uint32_t> graphics_family;
+    std::optional<uint32_t> present_family;
 
     [[nodiscard]] bool IsComplete() const {
-        return graphicsFamily.has_value() && presentFamily.has_value();
+        return graphics_family.has_value() && present_family.has_value();
     }
 };
 
 struct SwapChainSupportDetails {
     VkSurfaceCapabilitiesKHR capabilities;
     std::vector<VkSurfaceFormatKHR> formats;
-    std::vector<VkPresentModeKHR> presentModes;
+    std::vector<VkPresentModeKHR> present_modes;
 };
 
-const std::vector<const char*> validationLayers = {
+const std::vector<const char*> validation_layers = {
     "VK_LAYER_KHRONOS_validation"
 };
 

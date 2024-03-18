@@ -18,10 +18,9 @@
 #include "VulkanTextureImage.h"
 #include "VulkanVertexBuffer.h"
 #include "VulkanWindowContext.h"
-#include "../../IGraphicsContext.h"
+#include "../IGraphicsContext.h"
 #include "GLFW/glfw3.h"
 #include "glm/ext/matrix_transform.hpp"
-#include "spdlog/spdlog.h"
 
 constexpr uint32_t WIDTH = 1920;
 constexpr uint32_t HEIGHT = 1080;
@@ -52,38 +51,38 @@ const std::vector<uint32_t> indices = {
 class VulkanRenderContext final : public IGraphicsContext {
 public:
     VulkanRenderContext();
-    ~VulkanRenderContext();
+    ~VulkanRenderContext() override;
 
     void run() override;
 
 private:
     // Window management
-    GLFWwindow* window;
-    std::unique_ptr<VulkanWindowContext> m_WindowContext;
+    GLFWwindow* m_window;
+    std::unique_ptr<VulkanWindowContext> m_windowContext;
 
     // Vulkan core components
-    std::unique_ptr<VulkanInstance> m_Instance;
-    VkSurfaceKHR surface;
-    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-    std::unique_ptr<VulkanDeviceSelector> m_DeviceSelector;
-    VkDevice device;
+    std::unique_ptr<VulkanInstance> m_instance;
+    VkSurfaceKHR m_surface;
+    VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
+    std::unique_ptr<VulkanDeviceSelector> m_deviceSelector;
+    VkDevice m_device;
 
     // Swap chain and rendering setup
-    std::unique_ptr<VulkanSwapChain> m_SwapChain;
-    VkRenderPass renderPass;
-    std::unique_ptr<VulkanRenderPassBuilder> m_RenderPassFactory;
-    std::unique_ptr<VulkanPipeline> m_Pipeline;
-    VkFramebuffer framebuffer;
+    std::unique_ptr<VulkanSwapChain> m_swapChain;
+    VkRenderPass m_renderPass;
+    std::unique_ptr<VulkanRenderPassBuilder> m_renderPassFactory;
+    std::unique_ptr<VulkanPipeline> m_pipeline;
+    VkFramebuffer m_framebuffer;
 
     // Command processing
-    VkCommandPool commandPool;
-    std::unique_ptr<VulkanCommandPoolManager> m_CmdPoolManager;
-    VkCommandBuffer commandBuffer;
-    std::unique_ptr<VulkanCommandBuffer> m_CmdBuffer;
+    VkCommandPool m_commandPool;
+    std::unique_ptr<VulkanCommandPoolManager> m_cmdPoolManager;
+    VkCommandBuffer m_commandBuffer;
+    std::unique_ptr<VulkanCommandBuffer> m_cmdBuffer;
 
     // Buffers, vertices, and indices
-    std::unique_ptr<VulkanVertexBuffer<Vertex2D>> m_VulkanVertexBuffer;
-    std::unique_ptr<VulkanIndexBuffer> m_IndexBuffer;
+    std::unique_ptr<VulkanVertexBuffer<Vertex2D>> m_vulkanVertexBuffer;
+    std::unique_ptr<VulkanIndexBuffer> m_indexBuffer;
 
     // Descriptor sets and buffers
     VkDescriptorSetLayout m_descriptorSetLayout;
@@ -100,46 +99,46 @@ private:
 
     //Texture Creation
     std::unique_ptr<VulkanTextureImage> m_VulkanTextureImage;
-    VkImage m_TextureImage;
-    VkImageView m_TextureImageView;
-    VkSampler m_TextureSampler;
+    VkImage m_textureImage;
+    VkImageView m_textureImageView;
+    VkSampler m_textureSampler;
 
     // Initialization and setup methods
-    void initWindow();
+    void InitWindow();
 
 
-    void initVulkan();
-    void createSurface();
-    void pickSuitableDevices();
-    void initInstance();
-    void createSwapChain();
-    void initRenderPassFactory();
-    void createGraphicsPipeline();
-    void createFramebuffers();
-    void createCommandPool();
-    void initCmdBufferManager();
-    void createVertexBuffer();
-    void createIndexBuffer();
-    void createUniformBuffer();
-    void createDescriptorSetLayout();
-    void createTextureImage();
-    void createTextureImageView();
-    void createTextureSampler();
-    VkDescriptorPool createDescriptorPool() const;
+    void InitVulkan();
+    void CreateSurface();
+    void PickSuitableDevices();
+    void InitInstance();
+    void CreateSwapChain();
+    void InitRenderPassFactory();
+    void CreateGraphicsPipeline();
+    void CreateFramebuffers();
+    void CreateCommandPool();
+    void InitCmdBufferManager();
+    void CreateVertexBuffer();
+    void CreateIndexBuffer();
+    void CreateUniformBuffer();
+    void CreateDescriptorSetLayout();
+    void CreateTextureImage();
+    void CreateTextureImageView();
+    void CreateTextureSampler();
+    [[nodiscard]] VkDescriptorPool CreateDescriptorPool() const;
     void CreateDescriptorSets();
-    void createCommandBuffer();
+    void CreateCommandBuffer();
 
 
-    void recordCommandBufferSegment(VkCommandBuffer commandBuffer, uint32_t imageIndex) const;
+    void RecordCommandBufferSegment(VkCommandBuffer commandBuffer, uint32_t imageIndex) const;
 
     // Main loop and frame drawing
-    void mainLoop();
-    void drawFrame();
-    void updateUniformBuffer(uint32_t currentImage) const;
+    void MainLoop();
+    void DrawFrame();
+    void UpdateUniformBuffer(uint32_t currentImage) const;
 
     // Synchronization methods
-    void createSyncObjects();
+    void CreateSyncObjects();
 
     // Cleanup
-    void cleanup();
+    void Cleanup();
 };

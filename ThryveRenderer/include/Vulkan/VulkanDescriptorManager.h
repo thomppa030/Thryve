@@ -19,13 +19,13 @@ class VulkanDescriptorManager {
 
     ~VulkanDescriptorManager();
 
-    void createDescriptorSetLayout(const std::vector<VulkanDescriptor>& descriptors);
-    void allocateDescriptorSets(uint32_t setCount);
+    void CreateDescriptorSetLayout(const std::vector<VulkanDescriptor>& descriptors);
+    void AllocateDescriptorSets(uint32_t setCount);
     // Function to update the descriptor sets with actual resources
-    void updateDescriptorSets(const std::vector<VkWriteDescriptorSet>& writeSets) const;
+    void UpdateDescriptorSets(const std::vector<VkWriteDescriptorSet>& writeSets) const;
 
-    [[nodiscard]] VkDescriptorSetLayout getDescriptorSetLayout() const { return m_descriptorSetLayout; }
-    [[nodiscard]] const std::vector<VkDescriptorSet>& getDescriptorSets() const { return m_descriptorSets; }
+    [[nodiscard]] VkDescriptorSetLayout GetDescriptorSetLayout() const { return m_descriptorSetLayout; }
+    [[nodiscard]] const std::vector<VkDescriptorSet>& GetDescriptorSets() const { return m_descriptorSets; }
 
 private:
     VkDevice m_device;

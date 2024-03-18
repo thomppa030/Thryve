@@ -38,6 +38,6 @@ VkSurfaceKHR VulkanWindowContext::CreateSurface(VkInstance instance) const {
 }
 
 void VulkanWindowContext::FrameBufferResizeCallback(GLFWwindow *window, int width, int height) {
-        auto app = static_cast<VulkanWindowContext*>(glfwGetWindowUserPointer(window));
+    const auto app = static_cast<VulkanWindowContext*>(glfwGetWindowUserPointer(window));
         app->bFrameBufferResized = true;
 }

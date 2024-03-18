@@ -7,19 +7,19 @@
 
 #include "utils/VkDebugUtils.h"
 
-VulkanCommandPoolManager::VulkanCommandPoolManager(VkDevice device, uint32_t queueFamilyIndex) : m_device(device) {
+VulkanCommandPoolManager::VulkanCommandPoolManager(VkDevice device, const uint32_t queueFamilyIndex) : m_device(device) {
     CreateCommandPool(queueFamilyIndex);
 }
 
 VulkanCommandPoolManager::~VulkanCommandPoolManager() {
     DestroyCommandPool();
 
-    for (auto& commandPool : m_threadCommandPools) {
+    for (const auto& commandPool : m_threadCommandPools) {
         vkDestroyCommandPool(m_device, commandPool, nullptr);
     }
 }
 
-void VulkanCommandPoolManager::ResetCommandPool(VkCommandPoolResetFlags flags) const {
+void VulkanCommandPoolManager::ResetCommandPool(const VkCommandPoolResetFlags flags) const {
     VK_CALL(vkResetCommandPool(m_device, m_commandPool, flags));
 }
 

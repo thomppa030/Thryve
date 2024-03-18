@@ -11,12 +11,12 @@ public:
     explicit VulkanDescriptorSetBuilder(const VkDevice device) : m_device(device){}
     ~VulkanDescriptorSetBuilder() = default;
 
-    VulkanDescriptorSetBuilder& addDescriptor(const VulkanDescriptor& descriptor) {
+    VulkanDescriptorSetBuilder& AddDescriptor(const VulkanDescriptor& descriptor) {
         m_descriptors.push_back(descriptor);
         return *this;
     }
 
-    [[nodiscard]] VkDescriptorSetLayout buildLayout() const {
+    [[nodiscard]] VkDescriptorSetLayout BuildLayout() const {
         std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
 
         for (const auto& desc : m_descriptors) {

@@ -91,7 +91,7 @@ struct PipelineConfigInfo {
         depthCompareOp = VK_COMPARE_OP_LESS; // Closer objects obscure further ones
     }
 
-    void ConfigureMultisampling(VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT) {
+    void ConfigureMultisampling(const VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT) {
         msaaSamples = sampleCount;
     }
 

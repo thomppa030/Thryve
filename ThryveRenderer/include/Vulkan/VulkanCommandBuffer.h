@@ -19,13 +19,13 @@ public:
     VkCommandBuffer Allocate(bool bBeginRecording = false);
 
     // Begins recording commands into the specified command buffer.
-    void Begin(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlags usageFlags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+    void Begin(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlags usageFlags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT) const;
 
     // Ends recording commands into the specified command buffer.
-    void End(VkCommandBuffer commandBuffer);
+    void End(VkCommandBuffer commandBuffer) const;
 
     // Submits a command buffer to a queue and optionally waits for execution to complete.
-    void Submit(VkCommandBuffer commandBuffer, VkQueue queue, bool waitForCompletion = false);
+    void Submit(VkCommandBuffer commandBuffer, VkQueue queue, bool waitForCompletion = false) const;
 
     void Free(const VkCommandBuffer& commandBuffer) const;
 

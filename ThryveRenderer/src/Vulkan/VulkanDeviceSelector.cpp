@@ -3,6 +3,7 @@
 //
 
 #include "Vulkan/VulkanDeviceSelector.h"
+
 #include <set>
 #include <stdexcept>
 
@@ -126,8 +127,8 @@ SwapChainSupportDetails VulkanDeviceSelector::querySwapChainSupport(const VkPhys
     VK_CALL(vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_surface, &presentModeCount, nullptr));
 
     if (presentModeCount != 0) {
-        details.presentModes.resize(presentModeCount);
-        VK_CALL(vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_surface, &presentModeCount, details.presentModes.data()));
+        details.present_modes.resize(presentModeCount);
+        VK_CALL(vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_surface, &presentModeCount, details.present_modes.data()));
     }
     return details;
 }
@@ -142,7 +143,7 @@ IsDeviceSuitable(VkPhysicalDevice device, const std::vector<const char *> &devic
 
         if (extensionsSupported) {
             SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device);
-            swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+            swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.present_modes.empty();
         }
 
         VkPhysicalDeviceFeatures supportedFeatures;
@@ -180,14 +181,14 @@ QueueFamilyIndices VulkanDeviceSelector::FindQueueFamilies(VkPhysicalDevice devi
         int i = 0;
         for (const auto& queueFamily : queueFamilies) {
             if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-                indices.graphicsFamily = i;
+                indices.graphics_family = i;
             }
 
             VkBool32 presentSupport = false;
             VK_CALL(vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_surface, &presentSupport));
 
             if (presentSupport) {
-                indices.presentFamily = i;
+                indices.present_family = i;
             }
 
             if (indices.IsComplete()) {
@@ -206,7 +207,7 @@ void VulkanDeviceSelector::CreateLogicalDevice(VkPhysicalDevice physicalDevice
         QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
 
         std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-        std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+        std::set<uint32_t> uniqueQueueFamilies = {indices.graphics_family.value(), indices.present_family.value()};
 
         float queuePriority = 1.0f;
         for (uint32_t queueFamily : uniqueQueueFamilies) {
@@ -233,8 +234,8 @@ void VulkanDeviceSelector::CreateLogicalDevice(VkPhysicalDevice physicalDevice
         createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
         if (enableValidationLayers) {
-            createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-            createInfo.ppEnabledLayerNames = validationLayers.data();
+            createInfo.enabledLayerCount = static_cast<uint32_t>(validation_layers.size());
+            createInfo.ppEnabledLayerNames = validation_layers.data();
         } else {
             createInfo.enabledLayerCount = 0;
         }
@@ -242,6 +243,6 @@ void VulkanDeviceSelector::CreateLogicalDevice(VkPhysicalDevice physicalDevice
 
         VK_CALL(vkCreateDevice(physicalDevice, &createInfo, nullptr, &m_logicalDevice));
 
-        vkGetDeviceQueue(m_logicalDevice, indices.graphicsFamily.value(), 0, &m_graphicsQueue);
-        vkGetDeviceQueue(m_logicalDevice, indices.presentFamily.value(), 0, &m_presentQueue);
+        vkGetDeviceQueue(m_logicalDevice, indices.graphics_family.value(), 0, &m_graphicsQueue);
+        vkGetDeviceQueue(m_logicalDevice, indices.present_family.value(), 0, &m_presentQueue);
 }

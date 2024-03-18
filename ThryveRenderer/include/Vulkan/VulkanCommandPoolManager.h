@@ -27,7 +27,5 @@ private:
 
     void CreateCommandPool(uint32_t queueFamilyIndex);
 
-    void CreateCommandPoolsForThreads(uint32_t queueFamilyIndex);
-
     void DestroyCommandPool();
 };

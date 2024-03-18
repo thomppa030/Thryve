@@ -108,7 +108,7 @@ void VulkanSwapChain::CreateFramebuffers() {
     m_Framebuffers.resize(m_swapChainImageViews.size());
 
     for (size_t i = 0; i < m_swapChainImageViews.size(); i++) {
-        VkImageView attachments[] = {
+        const VkImageView attachments[] = {
             m_swapChainImageViews[i]
         };
 
@@ -145,9 +145,9 @@ void VulkanSwapChain::RecreateSwapChain() {
 void VulkanSwapChain::CreateSwapChain(uint32_t width, uint32_t height) {
         SwapChainSupportDetails swapChainSupport = m_deviceSelector->querySwapChainSupport(m_physicalDevice);
 
-        VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
-        VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
-        VkExtent2D extent = ChooseSwapExtent(swapChainSupport.capabilities);
+        const VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
+        const VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.present_modes);
+        const VkExtent2D extent = ChooseSwapExtent(swapChainSupport.capabilities);
 
         uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
         if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
@@ -303,7 +303,7 @@ VkResult VulkanSwapChain::PresentImage(uint32_t imageIndex, VkSemaphore renderFi
     presentInfo.waitSemaphoreCount = 1;
     presentInfo.pWaitSemaphores = &renderFinishedSemaphore;
 
-    VkSwapchainKHR swapChains[] = {m_swapChain};
+    const VkSwapchainKHR swapChains[] = {m_swapChain};
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = swapChains;
     presentInfo.pImageIndices = &imageIndex;

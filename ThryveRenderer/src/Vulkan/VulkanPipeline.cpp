@@ -102,7 +102,7 @@ std::vector<char> VulkanPipeline::ReadShaderFile(const std::string &filename) {
         throw std::runtime_error("failed to open file!");
     }
 
-    size_t fileSize = (size_t) file.tellg();
+    const auto fileSize = static_cast<size_t>(file.tellg());
     std::vector<char> buffer(fileSize);
 
     file.seekg(0);

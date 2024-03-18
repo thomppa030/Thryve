@@ -7,17 +7,17 @@
 class VulkanFrameSynchronizer {
 public:
     struct FrameSyncObjects {
-        VkSemaphore imageAvailableSemaphore;
-        VkSemaphore renderFinishedSemaphore;
-        VkFence inFlightFence;
+        VkSemaphore image_available_semaphore;
+        VkSemaphore render_finished_semaphore;
+        VkFence in_flight_fence;
     };
 
     VulkanFrameSynchronizer(VkDevice device, uint32_t maxFramesInFlight, VkQueue graphicsQueue);
     ~VulkanFrameSynchronizer();
 
-    bool WaitForFences(uint32_t currentFrame);
+    [[nodiscard]] bool WaitForFences(uint32_t currentFrame) const;
 
-    uint32_t AdvanceFrame(uint32_t currentFrame);
+    [[nodiscard]] uint32_t AdvanceFrame(uint32_t currentFrame) const;
 
     // Delete copy/move constructors and assignment operators
     VulkanFrameSynchronizer(const VulkanFrameSynchronizer&) = delete;
@@ -26,17 +26,16 @@ public:
     VulkanFrameSynchronizer& operator=(VulkanFrameSynchronizer&&) = delete;
 
     [[nodiscard]] const FrameSyncObjects& GetSyncObjects(uint32_t frameIndex) const;
-    bool SubmitCommandBuffers(const VkCommandBuffer *commandBuffers, uint32_t currentFrame, uint32_t imageIndex);
+    bool SubmitCommandBuffers(const VkCommandBuffer *commandBuffers, uint32_t currentFrame, uint32_t imageIndex) const;
 
 private:
     VkDevice m_device{};
     std::vector<FrameSyncObjects> m_syncObjects;
     uint32_t m_maxFramesInFlight{};
-    VkQueue m_GraphicsQueue;
+    VkQueue m_graphicsQueue;
 
     void CreateSyncObjects();
-    void DestroySyncObjects();
+    void DestroySyncObjects() const;
 
-
-    void ResetFences(uint32_t currentFrame);
+    void ResetFences(uint32_t currentFrame) const;
 };

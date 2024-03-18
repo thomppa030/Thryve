@@ -6,66 +6,68 @@
 
 
 #define STB_IMAGE_IMPLEMENTATION
+#include <iostream>
+
+#include "Config.h"
 #include "stb_image.h"
 #include "glm/ext/matrix_clip_space.hpp"
-#include "Vulkan/VulkanUniformBuffer.h"
-#include "Config.h"
+#include "utils/VkDebugUtils.h"
+#include "utils/VulkanBufferUtils.h"
 #include "Vulkan/VulkanDescriptorManager.h"
 #include "Vulkan/VulkanDescriptorSetBuilder.h"
 #include "Vulkan/VulkanDeviceSelector.h"
-#include "utils/VulkanBufferUtils.h"
-#include "utils/VkDebugUtils.h"
+#include "Vulkan/VulkanUniformBuffer.h"
 
-VulkanRenderContext::VulkanRenderContext(): window(nullptr), surface(nullptr), device(nullptr),
-                                            renderPass(nullptr),
-                                            commandPool(nullptr){
+VulkanRenderContext::VulkanRenderContext(): m_window(nullptr), m_surface(nullptr), m_device(nullptr),
+                                            m_renderPass(nullptr),
+                                            m_commandPool(nullptr){
 }
 
 VulkanRenderContext::~VulkanRenderContext() {
 }
 
-void VulkanRenderContext::initWindow() {
-    m_WindowContext = std::make_unique<VulkanWindowContext>("ThryveRenderer", WIDTH, HEIGHT);
-    window = m_WindowContext->GetWindow();
+void VulkanRenderContext::InitWindow() {
+    m_windowContext = std::make_unique<VulkanWindowContext>("ThryveRenderer", WIDTH, HEIGHT);
+    m_window = m_windowContext->GetWindow();
 }
 
-void VulkanRenderContext::initInstance() {
-    m_Instance = std::make_unique<VulkanInstance>();
-    m_Instance->init("ThryveRenderer");
+void VulkanRenderContext::InitInstance() {
+    m_instance = std::make_unique<VulkanInstance>();
+    m_instance->init("ThryveRenderer");
 }
 
-void VulkanRenderContext::pickSuitableDevices() {
-    m_DeviceSelector = std::make_unique<VulkanDeviceSelector>(m_Instance->getInstance(), surface);
-    m_DeviceSelector->PickSuitableDevice(deviceExtensions, enableValidationLayers);
-    physicalDevice = m_DeviceSelector->GetPhysicalDevice();
-    device = m_DeviceSelector->GetLogicalDevice();
+void VulkanRenderContext::PickSuitableDevices() {
+    m_deviceSelector = std::make_unique<VulkanDeviceSelector>(m_instance->getInstance(), m_surface);
+    m_deviceSelector->PickSuitableDevice(deviceExtensions, enableValidationLayers);
+    m_physicalDevice = m_deviceSelector->GetPhysicalDevice();
+    m_device = m_deviceSelector->GetLogicalDevice();
 }
 
-void VulkanRenderContext::createSwapChain() {
+void VulkanRenderContext::CreateSwapChain() {
     int width, height = 0;
-    glfwGetFramebufferSize(window, &width, &height);
-    m_SwapChain->InitializeSwapChain(width, height);
+    glfwGetFramebufferSize(m_window, &width, &height);
+    m_swapChain->InitializeSwapChain(width, height);
 }
 
-void VulkanRenderContext::initRenderPassFactory() {
-    m_RenderPassFactory = std::make_unique<VulkanRenderPassBuilder>(device);
-    m_RenderPassFactory->CreateStandardRenderPasses(m_SwapChain->GetSwapchainImageFormat());
+void VulkanRenderContext::InitRenderPassFactory() {
+    m_renderPassFactory = std::make_unique<VulkanRenderPassBuilder>(m_device);
+    m_renderPassFactory->CreateStandardRenderPasses(m_swapChain->GetSwapchainImageFormat());
 }
 
-void VulkanRenderContext::createFramebuffers() {
-    m_SwapChain->CreateFramebuffers();
+void VulkanRenderContext::CreateFramebuffers() {
+    m_swapChain->CreateFramebuffers();
 }
 
-void VulkanRenderContext::createCommandPool() {
-    m_CmdPoolManager = std::make_unique<VulkanCommandPoolManager>(device, m_DeviceSelector->FindQueueFamilies(physicalDevice).graphicsFamily.value());
-    commandPool = m_CmdPoolManager->GetCommandPool();
+void VulkanRenderContext::CreateCommandPool() {
+    m_cmdPoolManager = std::make_unique<VulkanCommandPoolManager>(m_device, m_deviceSelector->FindQueueFamilies(m_physicalDevice).graphics_family.value());
+    m_commandPool = m_cmdPoolManager->GetCommandPool();
 }
 
-void VulkanRenderContext::initCmdBufferManager() {
-    m_CmdBuffer = std::make_unique<VulkanCommandBuffer>(device, commandPool);
+void VulkanRenderContext::InitCmdBufferManager() {
+    m_cmdBuffer = std::make_unique<VulkanCommandBuffer>(m_device, m_commandPool);
 }
 
-VkDescriptorPool VulkanRenderContext::createDescriptorPool() const {
+VkDescriptorPool VulkanRenderContext::CreateDescriptorPool() const {
 
     std::array<VkDescriptorPoolSize, 2> poolSizes{};
     // Uniform buffers
@@ -83,15 +85,15 @@ VkDescriptorPool VulkanRenderContext::createDescriptorPool() const {
     poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * 2); // Assuming one set for UB and one for samplers per frame
 
     VkDescriptorPool descriptorPool;
-    VK_CALL(vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool));
+    VK_CALL(vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &descriptorPool));
 
     return descriptorPool;
 }
 
 void VulkanRenderContext::CreateDescriptorSets() {
 
-    m_descriptorManager->allocateDescriptorSets(MAX_FRAMES_IN_FLIGHT);
-    m_descriptorSets = m_descriptorManager->getDescriptorSets();
+    m_descriptorManager->AllocateDescriptorSets(MAX_FRAMES_IN_FLIGHT);
+    m_descriptorSets = m_descriptorManager->GetDescriptorSets();
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         VkDescriptorBufferInfo bufferInfo{};
@@ -101,8 +103,8 @@ void VulkanRenderContext::CreateDescriptorSets() {
 
         VkDescriptorImageInfo imageInfo{};
         imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfo.imageView = m_TextureImageView;
-        imageInfo.sampler = m_TextureSampler;
+        imageInfo.imageView = m_textureImageView;
+        imageInfo.sampler = m_textureSampler;
 
         std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
         descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -123,105 +125,105 @@ void VulkanRenderContext::CreateDescriptorSets() {
         descriptorWrites[1].pImageInfo = &imageInfo; // Optional
         descriptorWrites[1].pTexelBufferView = nullptr; // Optional
 
-        vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+        vkUpdateDescriptorSets(m_device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 }
 
-void VulkanRenderContext::createDescriptorSetLayout() {
+void VulkanRenderContext::CreateDescriptorSetLayout() {
     //TODO Either Refactor From DescriptorSetManager or make static, needs the Manager instantiated too early at the moment
     VulkanDescriptor uboDescriptor(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0, VK_SHADER_STAGE_VERTEX_BIT);
     VulkanDescriptor samplerDescriptor(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
-    m_descriptorManager->createDescriptorSetLayout({uboDescriptor, samplerDescriptor});
-    m_descriptorSetLayout = m_descriptorManager->getDescriptorSetLayout();
+    m_descriptorManager->CreateDescriptorSetLayout({uboDescriptor, samplerDescriptor});
+    m_descriptorSetLayout = m_descriptorManager->GetDescriptorSetLayout();
 }
 
-void VulkanRenderContext::createTextureImage() {
-    m_VulkanTextureImage = std::make_unique<VulkanTextureImage>(device, physicalDevice, m_CmdPoolManager->GetCommandPool(), m_DeviceSelector->GetGraphicsQueue(), commandBuffer);
+void VulkanRenderContext::CreateTextureImage() {
+    m_VulkanTextureImage = std::make_unique<VulkanTextureImage>(m_device, m_physicalDevice, m_cmdPoolManager->GetCommandPool(), m_deviceSelector->GetGraphicsQueue(), m_commandBuffer);
     m_VulkanTextureImage->createTextureImage(std::string(RESOURCE_DIR)+"/statue.jpg");
-    m_TextureImage = m_VulkanTextureImage->GetTextureImage();
+    m_textureImage = m_VulkanTextureImage->GetTextureImage();
 }
 
-void VulkanRenderContext::createTextureImageView() {
+void VulkanRenderContext::CreateTextureImageView() {
     m_VulkanTextureImage->createTextureImageView();
-    m_TextureImageView = m_VulkanTextureImage->GetTextureImageView();
+    m_textureImageView = m_VulkanTextureImage->GetTextureImageView();
 }
 
-void VulkanRenderContext::createTextureSampler() {
+void VulkanRenderContext::CreateTextureSampler() {
     m_VulkanTextureImage->createTextureSampler();
-    m_TextureSampler = m_VulkanTextureImage->GetTextureSampler();
+    m_textureSampler = m_VulkanTextureImage->GetTextureSampler();
 }
 
-void VulkanRenderContext::initVulkan() {
-    initInstance();
-    createSurface();
-    pickSuitableDevices();
-    m_SwapChain = std::make_unique<VulkanSwapChain>(m_DeviceSelector.get(),surface,window);
-    createSwapChain();
-    initRenderPassFactory();
-    renderPass = m_RenderPassFactory->GetRenderPass("default")->GetRenderPass();
-    m_SwapChain->SetRenderPass(renderPass);
+void VulkanRenderContext::InitVulkan() {
+    InitInstance();
+    CreateSurface();
+    PickSuitableDevices();
+    m_swapChain = std::make_unique<VulkanSwapChain>(m_deviceSelector.get(),m_surface,m_window);
+    CreateSwapChain();
+    InitRenderPassFactory();
+    m_renderPass = m_renderPassFactory->GetRenderPass("default")->GetRenderPass();
+    m_swapChain->SetRenderPass(m_renderPass);
 
-    m_descriptorPool = createDescriptorPool();
-    m_descriptorManager = std::make_unique<VulkanDescriptorManager>(device, m_descriptorPool);
-    createDescriptorSetLayout();
-    createGraphicsPipeline();
-    createFramebuffers();
-    createCommandPool();
-    createTextureImage();
-    createTextureImageView();
-    createTextureSampler();
-    createVertexBuffer();
-    createIndexBuffer();
-    createUniformBuffer();
+    m_descriptorPool = CreateDescriptorPool();
+    m_descriptorManager = std::make_unique<VulkanDescriptorManager>(m_device, m_descriptorPool);
+    CreateDescriptorSetLayout();
+    CreateGraphicsPipeline();
+    CreateFramebuffers();
+    CreateCommandPool();
+    CreateTextureImage();
+    CreateTextureImageView();
+    CreateTextureSampler();
+    CreateVertexBuffer();
+    CreateIndexBuffer();
+    CreateUniformBuffer();
     CreateDescriptorSets();
-    initCmdBufferManager();
-    createCommandBuffer();
-    createSyncObjects();
+    InitCmdBufferManager();
+    CreateCommandBuffer();
+    CreateSyncObjects();
 }
 
-void VulkanRenderContext::mainLoop() {
-    while (!glfwWindowShouldClose(window)) {
+void VulkanRenderContext::MainLoop() {
+    while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
-        drawFrame();
+        DrawFrame();
     }
 
-    VK_CALL(vkDeviceWaitIdle(device));
+    VK_CALL(vkDeviceWaitIdle(m_device));
 }
 
-void VulkanRenderContext::cleanup() {
+void VulkanRenderContext::Cleanup() {
 
     m_FrameSynchronizer.reset();
-    m_CmdBuffer->Free(commandBuffer);
-    m_CmdBuffer.reset();
-    m_IndexBuffer.reset();
-    m_VulkanVertexBuffer.reset();
-    m_CmdPoolManager.reset();
-    m_Pipeline.reset();
-    m_RenderPassFactory.reset();
-    m_SwapChain.reset();
+    m_cmdBuffer->Free(m_commandBuffer);
+    m_cmdBuffer.reset();
+    m_indexBuffer.reset();
+    m_vulkanVertexBuffer.reset();
+    m_cmdPoolManager.reset();
+    m_pipeline.reset();
+    m_renderPassFactory.reset();
+    m_swapChain.reset();
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        vkDestroyBuffer(device, m_uniformBuffers[i], nullptr);
-        vkFreeMemory(device, m_uniformBuffersMemory[i], nullptr);
+        vkDestroyBuffer(m_device, m_uniformBuffers[i], nullptr);
+        vkFreeMemory(m_device, m_uniformBuffersMemory[i], nullptr);
     }
 
-    vkDestroyDescriptorPool(device, m_descriptorPool, nullptr);
+    vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
 
     m_VulkanTextureImage.reset();
 
-    vkDestroyDescriptorSetLayout(device, m_descriptorSetLayout, nullptr);
+    vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
 
-    m_DeviceSelector.reset();
-    vkDestroySurfaceKHR(m_Instance->getInstance(), surface, nullptr);
-    m_Instance.reset();
-    m_WindowContext.reset();
+    m_deviceSelector.reset();
+    vkDestroySurfaceKHR(m_instance->getInstance(), m_surface, nullptr);
+    m_instance.reset();
+    m_windowContext.reset();
 }
 
-void VulkanRenderContext::createSurface() {
-    surface = m_WindowContext->CreateSurface(m_Instance->getInstance());
+void VulkanRenderContext::CreateSurface() {
+    m_surface = m_windowContext->CreateSurface(m_instance->getInstance());
 }
 
-void VulkanRenderContext::createGraphicsPipeline() {
+void VulkanRenderContext::CreateGraphicsPipeline() {
 
     PipelineConfigInfo configInfo;
     configInfo.vertexInput.bindings = {Vertex2D::getBindingDescription()};
@@ -232,89 +234,89 @@ void VulkanRenderContext::createGraphicsPipeline() {
     configInfo.cullMode = VK_CULL_MODE_BACK_BIT;
     configInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 
-    m_Pipeline = std::make_unique<VulkanPipeline>(device, renderPass);
+    m_pipeline = std::make_unique<VulkanPipeline>(m_device, m_renderPass);
 
     const auto vertexShaderPath = std::string(SHADERS_DIR)+"/SPIRV/triangle.vert.spv";
     const auto fragmentShaderPath = std::string(SHADERS_DIR)+"/SPIRV/triangle.frag.spv";
 
-    m_Pipeline->CreatePipeline(vertexShaderPath, fragmentShaderPath, configInfo);
+    m_pipeline->CreatePipeline(vertexShaderPath, fragmentShaderPath, configInfo);
 }
 
-void VulkanRenderContext::createVertexBuffer() {
-    m_VulkanVertexBuffer = std::make_unique<VulkanVertexBuffer<Vertex2D>>(device, physicalDevice, commandPool, m_DeviceSelector->GetGraphicsQueue());
-    m_VulkanVertexBuffer->Create(vertices);
+void VulkanRenderContext::CreateVertexBuffer() {
+    m_vulkanVertexBuffer = std::make_unique<VulkanVertexBuffer<Vertex2D>>(m_device, m_physicalDevice, m_commandPool, m_deviceSelector->GetGraphicsQueue());
+    m_vulkanVertexBuffer->Create(vertices);
 }
 
-void VulkanRenderContext::createIndexBuffer() {
-    m_IndexBuffer = std::make_unique<VulkanIndexBuffer>(device, physicalDevice, commandPool, m_DeviceSelector->GetGraphicsQueue());
-    m_IndexBuffer->Create(indices);
+void VulkanRenderContext::CreateIndexBuffer() {
+    m_indexBuffer = std::make_unique<VulkanIndexBuffer>(m_device, m_physicalDevice, m_commandPool, m_deviceSelector->GetGraphicsQueue());
+    m_indexBuffer->Create(indices);
 }
 
-void VulkanRenderContext::createUniformBuffer() {
+void VulkanRenderContext::CreateUniformBuffer() {
     m_uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     m_uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
     m_uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         constexpr VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-        VulkanBufferUtils::createBuffer({device, physicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT}, m_uniformBuffers[i], m_uniformBuffersMemory[i]);
+        VulkanBufferUtils::createBuffer({m_device, m_physicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT}, m_uniformBuffers[i], m_uniformBuffersMemory[i]);
 
-        VK_CALL(vkMapMemory(device, m_uniformBuffersMemory[i], 0, bufferSize, 0, &m_uniformBuffersMapped[i]));
+        VK_CALL(vkMapMemory(m_device, m_uniformBuffersMemory[i], 0, bufferSize, 0, &m_uniformBuffersMapped[i]));
     }
 }
 
-void VulkanRenderContext::createCommandBuffer() {
-    commandBuffer = m_CmdBuffer->Allocate();
+void VulkanRenderContext::CreateCommandBuffer() {
+    m_commandBuffer = m_cmdBuffer->Allocate();
 }
 
-void VulkanRenderContext::recordCommandBufferSegment(VkCommandBuffer commandBuffer, const uint32_t imageIndex) const {
+void VulkanRenderContext::RecordCommandBufferSegment(VkCommandBuffer commandBuffer, const uint32_t imageIndex) const {
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
     VK_CALL(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 
-    const auto framebuffers = m_SwapChain->GetFrameBuffers();
+    const auto framebuffers = m_swapChain->GetFrameBuffers();
 
     VkRenderPassBeginInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = renderPass;
+    renderPassInfo.renderPass = m_renderPass;
     renderPassInfo.framebuffer = framebuffers[imageIndex];
     renderPassInfo.renderArea.offset = {0, 0};
-    renderPassInfo.renderArea.extent = m_SwapChain->GetSwapchainExtent();
+    renderPassInfo.renderArea.extent = m_swapChain->GetSwapchainExtent();
 
-    constexpr VkClearValue clearColor = {{{0.5f, 0.5f, 0.0f, 1.0f}}};
+    constexpr VkClearValue clearColor = {{{0.5f, 0.7f, 0.5f, 1.0f}}};
     renderPassInfo.clearValueCount = 1;
     renderPassInfo.pClearValues = &clearColor;
 
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetPipeline());
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetPipeline());
 
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = static_cast<float>(m_SwapChain->GetSwapchainExtent().width);
-    viewport.height = static_cast<float>(m_SwapChain->GetSwapchainExtent().height);
+    viewport.width = static_cast<float>(m_swapChain->GetSwapchainExtent().width);
+    viewport.height = static_cast<float>(m_swapChain->GetSwapchainExtent().height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = m_SwapChain->GetSwapchainExtent();
+    scissor.extent = m_swapChain->GetSwapchainExtent();
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-    if (m_VulkanVertexBuffer) {
-        m_VulkanVertexBuffer->Bind(commandBuffer);
+    if (m_vulkanVertexBuffer) {
+        m_vulkanVertexBuffer->Bind(commandBuffer);
     }
 
-    if (m_IndexBuffer) {
-        m_IndexBuffer->Bind(commandBuffer);
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetPipelineLayout(), 0, 1, &m_descriptorSets[currentFrame], 0, nullptr);
-        m_IndexBuffer->Draw(commandBuffer);
+    if (m_indexBuffer) {
+        m_indexBuffer->Bind(commandBuffer);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetPipelineLayout(), 0, 1, &m_descriptorSets[currentFrame], 0, nullptr);
+        m_indexBuffer->Draw(commandBuffer);
     }
     else {
-        m_VulkanVertexBuffer->Draw(commandBuffer);
+        m_vulkanVertexBuffer->Draw(commandBuffer);
     }
 
     vkCmdEndRenderPass(commandBuffer);
@@ -322,73 +324,74 @@ void VulkanRenderContext::recordCommandBufferSegment(VkCommandBuffer commandBuff
     VK_CALL(vkEndCommandBuffer(commandBuffer));
 }
 
-void VulkanRenderContext::createSyncObjects() {
-    m_FrameSynchronizer = std::make_unique<VulkanFrameSynchronizer>(device, MAX_FRAMES_IN_FLIGHT, m_DeviceSelector->GetGraphicsQueue());
+void VulkanRenderContext::CreateSyncObjects() {
+    m_FrameSynchronizer = std::make_unique<VulkanFrameSynchronizer>(m_device, MAX_FRAMES_IN_FLIGHT, m_deviceSelector->GetGraphicsQueue());
 }
 
-void VulkanRenderContext::updateUniformBuffer(const uint32_t currentImage) const {
+void VulkanRenderContext::UpdateUniformBuffer(const uint32_t currentImage) const {
     static auto startTime = std::chrono::high_resolution_clock::now();
 
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+    const auto currentTime = std::chrono::high_resolution_clock::now();
+    const float deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
     UniformBufferObject ubo{};
-    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    ubo.model = glm::rotate(glm::mat4(1.0f), deltaTime * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     ubo.projection = glm::perspective(glm::radians(45.0f)
-                                      , m_SwapChain->GetSwapchainExtent().width / (float) m_SwapChain->
-                                        GetSwapchainExtent().height, 0.1f, 10.0f);
+                                      , m_swapChain->GetSwapchainExtent().width / static_cast<float>(m_swapChain->
+                                            GetSwapchainExtent().height), 0.1f, 10.0f);
     ubo.projection[1][1] *= -1;
 
     memcpy(m_uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
 }
 
-void VulkanRenderContext::drawFrame() {
+void VulkanRenderContext::DrawFrame() {
     const auto frameStart = std::chrono::steady_clock::now();
 
     auto& syncObjects = m_FrameSynchronizer->GetSyncObjects(currentFrame);
 
     if (!m_FrameSynchronizer->WaitForFences(currentFrame)) {
-        VK_CALL(vkWaitForFences(device, 1, &syncObjects.inFlightFence, VK_TRUE, UINT64_MAX));
+        VK_CALL(vkWaitForFences(m_device, 1, &syncObjects.in_flight_fence, VK_TRUE, UINT64_MAX));
     }
 
-    auto [result, optionalImageIndex] = m_SwapChain->AcquireNextImage(syncObjects.imageAvailableSemaphore);
-
-    if (result == VK_SUCCESS) {
+    if (auto [result, optionalImageIndex] = m_swapChain->AcquireNextImage(syncObjects.image_available_semaphore);
+        result == VK_SUCCESS) {
         if (optionalImageIndex.has_value()) {
-            uint32_t imageIndex = optionalImageIndex.value();
+            const uint32_t imageIndex = optionalImageIndex.value();
 
-            if (!m_SwapChain->HandleAcquireResult(result)) {
-                m_SwapChain->RecreateSwapChain();
+            if (!m_swapChain->HandleAcquireResult(result)) {
+                m_swapChain->RecreateSwapChain();
             }
 
-            updateUniformBuffer(currentFrame);
+            UpdateUniformBuffer(currentFrame);
 
-            VK_CALL(vkResetFences(device, 1, &syncObjects.inFlightFence));
+            VK_CALL(vkResetFences(m_device, 1, &syncObjects.in_flight_fence));
 
-            VK_CALL(vkResetCommandBuffer(commandBuffer, /*VkCommandBufferResetFlagBits*/ 0));
-            recordCommandBufferSegment(commandBuffer, imageIndex);
+            VK_CALL(vkResetCommandBuffer(m_commandBuffer, /*VkCommandBufferResetFlagBits*/ 0));
+            RecordCommandBufferSegment(m_commandBuffer, imageIndex);
 
-            if (!m_FrameSynchronizer->SubmitCommandBuffers(&commandBuffer, currentFrame, imageIndex)) {
+            if (!m_FrameSynchronizer->SubmitCommandBuffers(&m_commandBuffer, currentFrame, imageIndex)) {
                 throw std::runtime_error("Failed to submit draw command buffer!");
             }
 
-            result = m_SwapChain->PresentImage(imageIndex, syncObjects.renderFinishedSemaphore);
-            if (m_SwapChain->HandlePresentResult(result)) {
-                m_SwapChain->RecreateSwapChain();
+            result = m_swapChain->PresentImage(imageIndex, syncObjects.render_finished_semaphore);
+            if (m_swapChain->HandlePresentResult(result)) {
+                m_swapChain->RecreateSwapChain();
             }
 
             currentFrame = m_FrameSynchronizer->AdvanceFrame(currentFrame);
             const auto frameEnd = std::chrono::steady_clock::now();
             const std::chrono::duration<float, std::milli> frametime = frameEnd - frameStart;
             const float msPerFrame = frametime.count();
+
+            std::cout << "FrameTime: " << msPerFrame << std::endl;
         }
     }
 }
 
 void VulkanRenderContext::run() {
-    initWindow();
-    initVulkan();
-    mainLoop();
-    cleanup();
+    InitWindow();
+    InitVulkan();
+    MainLoop();
+    Cleanup();
 }

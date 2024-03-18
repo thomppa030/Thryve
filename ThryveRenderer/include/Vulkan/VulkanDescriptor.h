@@ -10,7 +10,7 @@
 class VulkanDescriptor {
     public:
         // Constructor
-        VulkanDescriptor(VkDescriptorType type, uint32_t binding, VkShaderStageFlags stageFlags)
+        VulkanDescriptor(const VkDescriptorType type, const uint32_t binding, const VkShaderStageFlags stageFlags)
         : m_type(type), m_binding(binding), m_stageFlags(stageFlags) {}
 
         // Accessors

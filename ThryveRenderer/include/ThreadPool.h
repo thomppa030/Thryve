@@ -16,7 +16,7 @@
 
 class ThreadPool {
 public:
-    ThreadPool(const size_t threads): stop(false) {
+    explicit ThreadPool(const size_t threads): stop(false) {
         for (size_t i = 0; i < threads; ++i) {
             workers.emplace_back([this] {
                 for (;;) {

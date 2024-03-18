@@ -10,10 +10,10 @@
 template<typename VertexType>
 class VulkanVertexBuffer {
 public:
-    VulkanVertexBuffer(VkDevice device, const VkPhysicalDevice physicalDevice
-    , VkCommandPool commandPool, VkQueue graphicsQueue): m_device(device), m_physicalDevice(physicalDevice),
-                                                         m_commandPool(commandPool),
-                                                         m_graphicsQueue(graphicsQueue){
+    VulkanVertexBuffer(const VkDevice device, const VkPhysicalDevice physicalDevice
+                       , const VkCommandPool commandPool, const VkQueue graphicsQueue): m_device(device), m_physicalDevice(physicalDevice),
+                                                                                        m_commandPool(commandPool),
+                                                                                        m_graphicsQueue(graphicsQueue){
     }
 
     ~VulkanVertexBuffer() {
@@ -90,7 +90,7 @@ public:
         // Map memory and copy vertex data
         void *data = nullptr; // Initialize to nullptr for safety
         VK_CALL(vkMapMemory(m_device, stagingBufferMemory, 0, bufferSize, 0, &data));
-        memcpy(data, vertices.data(), (size_t) bufferSize);
+        memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
         vkUnmapMemory(m_device, stagingBufferMemory);
 
         BufferCreationInfo vertexBufferInfo = {};

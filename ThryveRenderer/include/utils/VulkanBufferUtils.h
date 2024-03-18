@@ -64,8 +64,7 @@ public:
     }
 
     static void CopyBuffer(const BufferCopyInfo& copyInfo) {
-
-        VkCommandBuffer commandBuffer = SingleTimeCommandUtil::BeginSingleTimeCommands(copyInfo.device, copyInfo.commandPool);
+        const VkCommandBuffer commandBuffer = SingleTimeCommandUtil::BeginSingleTimeCommands(copyInfo.device, copyInfo.commandPool);
 
         VkBufferCopy copyRegion{};
         copyRegion.size = copyInfo.size;

@@ -13,8 +13,8 @@ public:
     ~VulkanUniformBuffer();
 
     void UpdateUniformBuffer(uint32_t currentImage, const UniformBufferObject& uboData);
-    [[nodiscard]] VkBuffer GetBuffer(uint32_t index) const {return m_UniformBuffers[index];}
-    [[nodiscard]] void* GetMappedMemory(uint32_t index) const { return m_MappedMemory[index]; }
+    [[nodiscard]] VkBuffer GetBuffer(const uint32_t index) const {return m_UniformBuffers[index];}
+    [[nodiscard]] void* GetMappedMemory(const uint32_t index) const { return m_MappedMemory[index]; }
 
 private:
     VkDevice m_Device;
