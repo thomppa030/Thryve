@@ -4,6 +4,9 @@
 shaderDir=$(pwd)
 outputDir="$shaderDir/SPIRV"
 
+rm $outputDir/triangle.vert.spv
+rm $outputDir/triangle.frag.spv
+
 # Create the output directory if it doesn't exist
 if [ ! -d "$outputDir" ]; then
     mkdir -p "$outputDir"
@@ -16,7 +19,7 @@ compile_shaders() {
         # Skip if no files are found
         [ -e "$inputFile" ] || continue
         baseName=$(basename -- "$inputFile")
-        outputFile="$outputDir/${baseName}${extensionFilter}.spv"
+        outputFile="$outputDir/${baseName}.spv"
         glslc "$inputFile" -o "$outputFile"
     done
 }

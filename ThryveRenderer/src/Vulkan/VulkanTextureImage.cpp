@@ -2,14 +2,14 @@
 // Created by thomppa on 3/17/24.
 //
 
-#include "../../include/Vulkan/VulkanTextureImage.h"
+#include "Vulkan/VulkanTextureImage.h"
 
 #include <complex>
-#include <../../../cmake-build-debug/generated/Config.h>
-#include <../../external/stb/stb_image.h>
+#include <Config.h>
+#include "stb_image.h"
 
-#include "../../include/utils/ImageUtils.h"
-#include "../../include/utils/VulkanBufferUtils.h"
+#include "utils/ImageUtils.h"
+#include "utils/VulkanBufferUtils.h"
 
 
 VulkanTextureImage::VulkanTextureImage(VkDevice device, VkPhysicalDevice physicalDevice, VkCommandPool commandPool

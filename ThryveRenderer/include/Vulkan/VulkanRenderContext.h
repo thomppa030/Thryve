@@ -37,15 +37,32 @@ constexpr bool enableValidationLayers = false;
 constexpr bool enableValidationLayers = true;
 #endif
 
-const std::vector<Vertex2D> vertices = {
+const std::vector<Vertex3D> vertices3D = {
+    {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f},{1.0f, 0.0f}},
+    {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f},{0.0f,0.0f}},
+    {{0.5f, 0.5f,0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f,1.0f}},
+    {{-0.5f, 0.5f,0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f,1.0f}},
+
+    {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f},{1.0f, 0.0f}},
+    {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f},{0.0f,0.0f}},
+    {{0.5f, 0.5f,-0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f,1.0f}},
+    {{-0.5f, 0.5f,-0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f,1.0f}},
+};
+
+const std::vector<Vertex2D> vertices2D = {
     {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f},{1.0f, 0.0f}},
     {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f},{0.0f,0.0f}},
     {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f,1.0f}},
     {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f,1.0f}},
 };
 
-const std::vector<uint32_t> indices = {
+const std::vector<uint32_t> indices2D = {
     0, 1, 2, 2, 3, 0
+};
+
+const std::vector<uint32_t> indices3D = {
+    0, 1, 2, 2, 3, 0,
+    4, 5, 6, 6, 7, 4
 };
 
 class VulkanRenderContext final : public IGraphicsContext {
@@ -81,7 +98,7 @@ private:
     std::unique_ptr<VulkanCommandBuffer> m_cmdBuffer;
 
     // Buffers, vertices, and indices
-    std::unique_ptr<VulkanVertexBuffer<Vertex2D>> m_vulkanVertexBuffer;
+    std::unique_ptr<VulkanVertexBuffer<Vertex3D>> m_vulkanVertexBuffer;
     std::unique_ptr<VulkanIndexBuffer> m_indexBuffer;
 
     // Descriptor sets and buffers

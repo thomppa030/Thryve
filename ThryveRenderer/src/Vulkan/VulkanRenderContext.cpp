@@ -226,8 +226,8 @@ void VulkanRenderContext::CreateSurface() {
 void VulkanRenderContext::CreateGraphicsPipeline() {
 
     PipelineConfigInfo configInfo;
-    configInfo.vertexInput.bindings = {Vertex2D::getBindingDescription()};
-    configInfo.vertexInput.attributes = Vertex2D::getAttributeDescriptions();
+    configInfo.vertexInput.bindings = {Vertex3D::getBindingDescription()};
+    configInfo.vertexInput.attributes = Vertex3D::getAttributeDescriptions();
     configInfo.SetViewportAndScissor(WIDTH, HEIGHT);
     configInfo.EnableDynamicViewportAndLineWidth();
     configInfo.descriptorSetLayout = m_descriptorSetLayout;
@@ -243,13 +243,13 @@ void VulkanRenderContext::CreateGraphicsPipeline() {
 }
 
 void VulkanRenderContext::CreateVertexBuffer() {
-    m_vulkanVertexBuffer = std::make_unique<VulkanVertexBuffer<Vertex2D>>(m_device, m_physicalDevice, m_commandPool, m_deviceSelector->GetGraphicsQueue());
-    m_vulkanVertexBuffer->Create(vertices);
+    m_vulkanVertexBuffer = std::make_unique<VulkanVertexBuffer<Vertex3D>>(m_device, m_physicalDevice, m_commandPool, m_deviceSelector->GetGraphicsQueue());
+    m_vulkanVertexBuffer->Create(vertices3D);
 }
 
 void VulkanRenderContext::CreateIndexBuffer() {
     m_indexBuffer = std::make_unique<VulkanIndexBuffer>(m_device, m_physicalDevice, m_commandPool, m_deviceSelector->GetGraphicsQueue());
-    m_indexBuffer->Create(indices);
+    m_indexBuffer->Create(indices3D);
 }
 
 void VulkanRenderContext::CreateUniformBuffer() {
@@ -335,7 +335,7 @@ void VulkanRenderContext::UpdateUniformBuffer(const uint32_t currentImage) const
     const float deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
     UniformBufferObject ubo{};
-    ubo.model = glm::rotate(glm::mat4(1.0f), deltaTime * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    ubo.model = glm::rotate(glm::mat4(1.0f), deltaTime * glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     ubo.projection = glm::perspective(glm::radians(45.0f)
                                       , m_swapChain->GetSwapchainExtent().width / static_cast<float>(m_swapChain->

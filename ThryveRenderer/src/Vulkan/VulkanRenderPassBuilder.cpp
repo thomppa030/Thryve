@@ -12,8 +12,7 @@ VulkanRenderPassBuilder::~VulkanRenderPassBuilder() {
 }
 
 VulkanRenderPass * VulkanRenderPassBuilder::GetRenderPass(const std::string &key) {
-    auto it = m_renderPasses.find(key);
-    if (it != m_renderPasses.end()) {
+    if (const auto it = m_renderPasses.find(key); it != m_renderPasses.end()) {
         return it->second.get();
     }
     return nullptr;

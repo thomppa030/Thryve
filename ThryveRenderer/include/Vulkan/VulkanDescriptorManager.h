@@ -8,6 +8,7 @@
 class VulkanDescriptorManager {
     public:
     VulkanDescriptorManager(VkDevice device, VkDescriptorPool descriptorPool);
+    ~VulkanDescriptorManager() = default;
 
     // Disallow copying to avoid issues with Vulkan handle ownership
     VulkanDescriptorManager(const VulkanDescriptorManager&) = delete;
@@ -17,7 +18,6 @@ class VulkanDescriptorManager {
     VulkanDescriptorManager(VulkanDescriptorManager&&) noexcept = default;
     VulkanDescriptorManager& operator=(VulkanDescriptorManager&&) noexcept = default;
 
-    ~VulkanDescriptorManager();
 
     void CreateDescriptorSetLayout(const std::vector<VulkanDescriptor>& descriptors);
     void AllocateDescriptorSets(uint32_t setCount);

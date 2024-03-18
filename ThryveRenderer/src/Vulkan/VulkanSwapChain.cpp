@@ -10,7 +10,8 @@
 #include "GLFW/glfw3.h"
 
 VulkanSwapChain::VulkanSwapChain(VulkanDeviceSelector* deviceSelector, VkSurfaceKHR surface, GLFWwindow* window) : m_deviceSelector(
-        deviceSelector), m_surface(surface), m_swapChain(nullptr), m_swapChainImageFormat(), m_swapChainExtent() {
+        deviceSelector), m_surface(surface), m_renderPass(nullptr), m_swapChain(nullptr), m_swapChainImageFormat(),
+    m_swapChainExtent() {
     m_physicalDevice = m_deviceSelector->GetPhysicalDevice();
     m_device = m_deviceSelector->GetLogicalDevice();
     m_window = window;

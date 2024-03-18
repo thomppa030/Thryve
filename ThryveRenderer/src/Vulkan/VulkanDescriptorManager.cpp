@@ -11,10 +11,6 @@ VulkanDescriptorManager::VulkanDescriptorManager(VkDevice device, VkDescriptorPo
                                                                                                     m_descriptorPool(descriptorPool), m_descriptorSetLayout(nullptr) {
 }
 
-VulkanDescriptorManager::~VulkanDescriptorManager() {
-    // Cleanup handled by Vulkan (descriptors freed with pool, layouts destroyed separately)
-}
-
 void VulkanDescriptorManager::CreateDescriptorSetLayout(const std::vector<VulkanDescriptor> &descriptors) {
     VulkanDescriptorSetBuilder builder(m_device);
     for (const auto &descriptor: descriptors) {
