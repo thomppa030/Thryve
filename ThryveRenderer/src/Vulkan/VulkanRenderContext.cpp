@@ -67,13 +67,13 @@ void VulkanRenderContext::initCmdBufferManager() {
 
 VkDescriptorPool VulkanRenderContext::createDescriptorPool() const {
 
-    std::array<VkDescriptorPoolSize, 1> poolSizes{};
+    std::array<VkDescriptorPoolSize, 2> poolSizes{};
     // Uniform buffers
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
     // Image samplers
-    // poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    // poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+    poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -99,24 +99,39 @@ void VulkanRenderContext::CreateDescriptorSets() {
         bufferInfo.offset = 0;
         bufferInfo.range = sizeof(UniformBufferObject);
 
-        VkWriteDescriptorSet descriptorWrite{};
-        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrite.dstSet = m_descriptorSets[i];
-        descriptorWrite.dstBinding = 0;
-        descriptorWrite.dstArrayElement = 0;
-        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptorWrite.descriptorCount = 1;
-        descriptorWrite.pBufferInfo = &bufferInfo;
-        descriptorWrite.pImageInfo = nullptr; // Optional
-        descriptorWrite.pTexelBufferView = nullptr; // Optional
-        vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = m_TextureImageView;
+        imageInfo.sampler = m_TextureSampler;
+
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = m_descriptorSets[i];
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+        descriptorWrites[0].pTexelBufferView = nullptr; // Optional
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = m_descriptorSets[i];
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &imageInfo; // Optional
+        descriptorWrites[1].pTexelBufferView = nullptr; // Optional
+
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 }
 
 void VulkanRenderContext::createDescriptorSetLayout() {
     //TODO Either Refactor From DescriptorSetManager or make static, needs the Manager instantiated too early at the moment
     VulkanDescriptor uboDescriptor(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0, VK_SHADER_STAGE_VERTEX_BIT);
-    m_descriptorManager->createDescriptorSetLayout({uboDescriptor});
+    VulkanDescriptor samplerDescriptor(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
+    m_descriptorManager->createDescriptorSetLayout({uboDescriptor, samplerDescriptor});
     m_descriptorSetLayout = m_descriptorManager->getDescriptorSetLayout();
 }
 
@@ -124,6 +139,16 @@ void VulkanRenderContext::createTextureImage() {
     m_VulkanTextureImage = std::make_unique<VulkanTextureImage>(device, physicalDevice, m_CmdPoolManager->GetCommandPool(), m_DeviceSelector->GetGraphicsQueue(), commandBuffer);
     m_VulkanTextureImage->createTextureImage(std::string(RESOURCE_DIR)+"/statue.jpg");
     m_TextureImage = m_VulkanTextureImage->GetTextureImage();
+}
+
+void VulkanRenderContext::createTextureImageView() {
+    m_VulkanTextureImage->createTextureImageView();
+    m_TextureImageView = m_VulkanTextureImage->GetTextureImageView();
+}
+
+void VulkanRenderContext::createTextureSampler() {
+    m_VulkanTextureImage->createTextureSampler();
+    m_TextureSampler = m_VulkanTextureImage->GetTextureSampler();
 }
 
 void VulkanRenderContext::initVulkan() {
@@ -143,6 +168,8 @@ void VulkanRenderContext::initVulkan() {
     createFramebuffers();
     createCommandPool();
     createTextureImage();
+    createTextureImageView();
+    createTextureSampler();
     createVertexBuffer();
     createIndexBuffer();
     createUniformBuffer();

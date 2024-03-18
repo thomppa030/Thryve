@@ -13,7 +13,11 @@ public:
 
     //Accessors
     void createTextureImage(const std::string& fileName);
+    void createTextureImageView();
+    void createTextureSampler();
     [[nodiscard]] VkImage GetTextureImage() const {return m_textureImage;}
+    [[nodiscard]] VkImageView GetTextureImageView() const {return m_textureImageView;}
+    [[nodiscard]] VkSampler GetTextureSampler() const {return m_TextureSampler;}
 
 private:
     VkDevice m_device;
@@ -23,12 +27,12 @@ private:
     VkCommandBuffer m_commandBuffer;
 
     VkImage m_textureImage{};
+    VkImageView m_textureImageView{};
+    VkSampler m_TextureSampler{};
     VkDeviceMemory m_textureImageMemory{};
     VkImageView imageView{};
     VkSampler sampler{};
 
     void cleanup();
     void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory) const;
-    void createSampler();
-    void allocate();
 };

@@ -25,6 +25,8 @@ VulkanTextureImage::~VulkanTextureImage() {
 
 
 void VulkanTextureImage::cleanup() {
+    vkDestroySampler(m_device, m_TextureSampler, nullptr);
+    vkDestroyImageView(m_device, m_textureImageView, nullptr);
     vkDestroyImage(m_device, m_textureImage, nullptr);
     vkFreeMemory(m_device, m_textureImageMemory, nullptr);
 }
@@ -70,8 +72,53 @@ void VulkanTextureImage::createTextureImage(const std::string &fileName) {
     vkFreeMemory(m_device, stagingBufferMemory, nullptr);
 }
 
+void VulkanTextureImage::createTextureImageView() {
+    VkImageViewCreateInfo viewInfo{};
+    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image = m_textureImage;
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    viewInfo.subresourceRange.baseMipLevel = 0;
+    viewInfo.subresourceRange.levelCount = 1;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount = 1;
+
+    VK_CALL(vkCreateImageView(m_device, &viewInfo, nullptr, &m_textureImageView));
+}
+
+void VulkanTextureImage::createTextureSampler() {
+    VkSamplerCreateInfo samplerInfo{};
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter = VK_FILTER_LINEAR;
+    samplerInfo.minFilter = VK_FILTER_LINEAR;
+
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+
+    VkPhysicalDeviceProperties properties{};
+    vkGetPhysicalDeviceProperties(m_PhysicalDevice, &properties);
+
+    samplerInfo.anisotropyEnable = VK_TRUE;
+    samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+
+    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerInfo.unnormalizedCoordinates = VK_FALSE;
+
+    samplerInfo.compareEnable = VK_FALSE;
+    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.mipLodBias = 0.0f;
+    samplerInfo.minLod = 0.0f;
+    samplerInfo.maxLod = 0.0f;
+
+    VK_CALL(vkCreateSampler(m_device, &samplerInfo, nullptr, &m_TextureSampler));
+}
+
 void VulkanTextureImage::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling,
-    VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage&image, VkDeviceMemory&imageMemory) const {
+                                     VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage&image, VkDeviceMemory&imageMemory) const {
 
     VkImageCreateInfo imageCreateInfo {};
     imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -102,10 +149,4 @@ void VulkanTextureImage::createImage(uint32_t width, uint32_t height, VkFormat f
     VK_CALL(vkAllocateMemory(m_device, &allocInfo, nullptr, &imageMemory));
 
     vkBindImageMemory(m_device, image, imageMemory, 0);
-}
-
-void VulkanTextureImage::createSampler() {
-}
-
-void VulkanTextureImage::allocate() {
 }

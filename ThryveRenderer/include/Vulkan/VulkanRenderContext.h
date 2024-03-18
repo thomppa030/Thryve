@@ -39,10 +39,10 @@ constexpr bool enableValidationLayers = true;
 #endif
 
 const std::vector<Vertex2D> vertices = {
-    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
+    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f},{1.0f, 0.0f}},
+    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f},{0.0f,0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f,1.0f}},
+    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f,1.0f}},
 };
 
 const std::vector<uint32_t> indices = {
@@ -101,9 +101,13 @@ private:
     //Texture Creation
     std::unique_ptr<VulkanTextureImage> m_VulkanTextureImage;
     VkImage m_TextureImage;
+    VkImageView m_TextureImageView;
+    VkSampler m_TextureSampler;
 
     // Initialization and setup methods
     void initWindow();
+
+
     void initVulkan();
     void createSurface();
     void pickSuitableDevices();
@@ -119,6 +123,8 @@ private:
     void createUniformBuffer();
     void createDescriptorSetLayout();
     void createTextureImage();
+    void createTextureImageView();
+    void createTextureSampler();
     VkDescriptorPool createDescriptorPool() const;
     void CreateDescriptorSets();
     void createCommandBuffer();
