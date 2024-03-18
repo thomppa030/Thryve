@@ -13,7 +13,7 @@ set(PRECOMPILE_HEADER "include/pch.h")
 
 # Define the library target
 add_library(ThryveRenderer
-        include/Vulkan/VulkanTextureImage.cpp
+        src/Vulkan/VulkanTextureImage.cpp
         include/Vulkan/VulkanTextureImage.h
         include/utils/ImageUtils.h)
 target_precompile_headers(ThryveRenderer PRIVATE ${PRECOMPILE_HEADER})
