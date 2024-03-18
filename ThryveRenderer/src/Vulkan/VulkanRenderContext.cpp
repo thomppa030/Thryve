@@ -121,6 +121,9 @@ void VulkanRenderContext::createDescriptorSetLayout() {
 }
 
 void VulkanRenderContext::createTextureImage() {
+    m_VulkanTextureImage = std::make_unique<VulkanTextureImage>(device, physicalDevice, m_CmdPoolManager->GetCommandPool(), m_DeviceSelector->GetGraphicsQueue(), commandBuffer);
+    m_VulkanTextureImage->createTextureImage(std::string(RESOURCE_DIR)+"/statue.jpg");
+    m_TextureImage = m_VulkanTextureImage->GetTextureImage();
 }
 
 void VulkanRenderContext::initVulkan() {
@@ -174,7 +177,11 @@ void VulkanRenderContext::cleanup() {
         vkDestroyBuffer(device, m_uniformBuffers[i], nullptr);
         vkFreeMemory(device, m_uniformBuffersMemory[i], nullptr);
     }
+
     vkDestroyDescriptorPool(device, m_descriptorPool, nullptr);
+
+    m_VulkanTextureImage.reset();
+
     vkDestroyDescriptorSetLayout(device, m_descriptorSetLayout, nullptr);
 
     m_DeviceSelector.reset();

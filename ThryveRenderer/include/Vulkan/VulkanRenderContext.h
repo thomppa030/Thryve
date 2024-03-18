@@ -15,6 +15,7 @@
 #include "VulkanIndexBuffer.h"
 #include "VulkanPipeline.h"
 #include "VulkanSwapChain.h"
+#include "VulkanTextureImage.h"
 #include "VulkanVertexBuffer.h"
 #include "VulkanWindowContext.h"
 #include "../../IGraphicsContext.h"
@@ -96,6 +97,10 @@ private:
     // Synchronization
     std::unique_ptr<VulkanFrameSynchronizer> m_FrameSynchronizer;
     uint32_t currentFrame = 0;
+
+    //Texture Creation
+    std::unique_ptr<VulkanTextureImage> m_VulkanTextureImage;
+    VkImage m_TextureImage;
 
     // Initialization and setup methods
     void initWindow();
