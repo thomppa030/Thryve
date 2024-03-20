@@ -13,5 +13,5 @@ public:
 
     std::unique_ptr<GraphicsContext> AppGraphicsContext;
 
-    void run() const;
+    void Run() const;
 };

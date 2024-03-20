@@ -6,10 +6,11 @@
 #include <atomic>
 #include <unordered_set>
 #include <utility>
+#include <mutex>
 
 namespace Thryve {
     static std::unordered_set<void*> s_LiveReferences;
-    static std::mutex<void*> s_LiveReferenceMutex;
+    static std::mutex s_LiveReferenceMutex;
 }
 
 namespace Thryve::Utils::References {
@@ -18,17 +19,17 @@ namespace Thryve::Utils::References {
     bool IsLive(void* instance);
 
     inline void AddToLiveReferences(void* instance) {
-        std::scoped_lock _lock(s_LiveReferenceMutex);
+        std::scoped_lock<std::mutex> _lock(s_LiveReferenceMutex);
         s_LiveReferences.insert(instance);
     }
 
     inline void RemoveFromeLiveReferences(void* instance) {
-        std::scoped_lock _lock(s_LiveReferenceMutex);
+        std::scoped_lock<std::mutex> _lock(s_LiveReferenceMutex);
         s_LiveReferences.erase(instance);
     }
 
     inline bool IsLive(void* instance) {
-        return s_LiveReferences.find(instance) != s_LiveReferences.end();
+        return s_LiveReferences.contains(instance);
     }
 }
 

@@ -9,21 +9,21 @@
 
 
 struct QueueFamilyIndices {
-    std::optional<uint32_t> graphics_family;
-    std::optional<uint32_t> present_family;
+    std::optional<uint32_t> GraphicsFamily;
+    std::optional<uint32_t> PresentFamily;
 
     [[nodiscard]] bool IsComplete() const {
-        return graphics_family.has_value() && present_family.has_value();
+        return GraphicsFamily.has_value() && PresentFamily.has_value();
     }
 };
 
 struct SwapChainSupportDetails {
-    VkSurfaceCapabilitiesKHR capabilities;
-    std::vector<VkSurfaceFormatKHR> formats;
-    std::vector<VkPresentModeKHR> present_modes;
+    VkSurfaceCapabilitiesKHR Capabilities;
+    std::vector<VkSurfaceFormatKHR> Formats;
+    std::vector<VkPresentModeKHR> PresentModes;
 };
 
-const std::vector<const char*> validation_layers = {
+const std::vector<const char*> VALIDATION_LAYERS = {
     "VK_LAYER_KHRONOS_validation"
 };
 
@@ -50,7 +50,7 @@ public:
 
     //TODO Parameter not necessary
     QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device) const;
-    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) const;
+    SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device) const;
 
 private:
 

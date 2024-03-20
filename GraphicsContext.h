@@ -5,7 +5,7 @@
 
 #include <memory>
 
-#include "IGraphicsContext.h"
+#include "IRenderContext.h"
 #include "ThryveRenderer/include/Vulkan/VulkanRenderContext.h"
 
 class GraphicsContext {
@@ -19,7 +19,7 @@ public:
     explicit GraphicsContext(const Backend backend) {
         switch (backend) {
             case Backend::Vulkan:
-                m_context = std::make_unique<VulkanRenderContext>();
+                m_context = std::make_unique<Thryve::Rendering::VulkanRenderContext>();
             break;
             case Backend::OpenGL:
                 // m_context = std::make_unique<OpenGLRenderContext>();
@@ -31,9 +31,9 @@ public:
     }
 
     void run() const {
-        m_context->run();
+        m_context->Run();
     }
 
 private:
-    std::unique_ptr<IGraphicsContext> m_context;
+    std::unique_ptr<Thryve::Rendering::IRenderContext> m_context;
 };

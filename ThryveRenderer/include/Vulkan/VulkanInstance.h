@@ -16,9 +16,9 @@ public:
     VulkanInstance(VulkanInstance&&) = delete;
     VulkanInstance& operator=(VulkanInstance&&) = delete;
 
-    void init(const std::string& applicationName);
+    void Init(const std::string& applicationName);
 
-    [[nodiscard]] VkInstance getInstance() const {
+    [[nodiscard]] VkInstance GetInstance() const {
         return m_instance;
     }
 
@@ -28,14 +28,14 @@ private:
     std::vector<const char*> m_validationLayers;
     std::vector<const char*> m_requiredExtensions;
 
-    void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
+    void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
 
-    void createInstance(const std::string& applicationName);
+    void CreateInstance(const std::string& applicationName);
 
-    [[nodiscard]] bool checkValidationLayerSupport() const;
-    [[nodiscard]] std::vector<const char*> getRequiredExtensions() const;
-    void setupDebugMessenger();
-    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
+    [[nodiscard]] bool CheckValidationLayerSupport() const;
+    [[nodiscard]] std::vector<const char*> GetRequiredExtensions() const;
+    void SetupDebugMessenger();
+    static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
 
     VkDebugUtilsMessengerEXT debugMessenger;
 };

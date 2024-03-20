@@ -144,15 +144,15 @@ void VulkanSwapChain::RecreateSwapChain() {
 }
 
 void VulkanSwapChain::CreateSwapChain(uint32_t width, uint32_t height) {
-        SwapChainSupportDetails swapChainSupport = m_deviceSelector->querySwapChainSupport(m_physicalDevice);
+        SwapChainSupportDetails swapChainSupport = m_deviceSelector->QuerySwapChainSupport(m_physicalDevice);
 
-        const VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
-        const VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.present_modes);
-        const VkExtent2D extent = ChooseSwapExtent(swapChainSupport.capabilities);
+        const VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.Formats);
+        const VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.PresentModes);
+        const VkExtent2D extent = ChooseSwapExtent(swapChainSupport.Capabilities);
 
-        uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
-        if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
-            imageCount = swapChainSupport.capabilities.maxImageCount;
+        uint32_t imageCount = swapChainSupport.Capabilities.minImageCount + 1;
+        if (swapChainSupport.Capabilities.maxImageCount > 0 && imageCount > swapChainSupport.Capabilities.maxImageCount) {
+            imageCount = swapChainSupport.Capabilities.maxImageCount;
         }
 
         VkSwapchainCreateInfoKHR createInfo{};
@@ -177,7 +177,7 @@ void VulkanSwapChain::CreateSwapChain(uint32_t width, uint32_t height) {
             createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
         }
 
-        createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
+        createInfo.preTransform = swapChainSupport.Capabilities.currentTransform;
         createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         createInfo.presentMode = presentMode;
         createInfo.clipped = VK_TRUE;

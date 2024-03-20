@@ -2,6 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/ThryveRenderer/external/VulkanMemoryAllocator" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/ThryveRenderer/external/glm" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/ThryveRenderer/external/stb" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/Catch2" vcs="Git" />

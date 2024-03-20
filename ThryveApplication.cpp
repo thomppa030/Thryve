@@ -11,6 +11,6 @@ ThryveApplication::~ThryveApplication() {
     AppGraphicsContext.reset();
 }
 
-void ThryveApplication::run() const {
+void ThryveApplication::Run() const {
     AppGraphicsContext->run();
 }
