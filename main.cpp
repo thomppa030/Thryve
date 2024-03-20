@@ -1,12 +1,15 @@
 #include <iostream>
 
 #include "ThryveApplication.h"
+#include "Core/App.h"
 
 int main() {
 
     try {
-        const ThryveApplication app;
-        app.Run();
+        auto* _coreApp = new Thryve::Core::App();
+        const ThryveApplication _app;
+
+        _app.Run();
     } catch (const std::runtime_error& e) {
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;

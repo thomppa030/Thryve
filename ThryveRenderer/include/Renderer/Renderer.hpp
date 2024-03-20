@@ -22,7 +22,7 @@ namespace Thryve::Rendering {
             };
         }
 
-        static Core::SharedRef<IRenderContext> GetContext() { return App::Get().GetRenderContext(); }
+        static Core::SharedRef<IRenderContext> GetContext() { return Core::App::Get().GetRenderContext(); }
 
     private:
     };

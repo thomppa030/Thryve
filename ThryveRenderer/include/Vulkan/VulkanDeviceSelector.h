@@ -6,6 +6,7 @@
 #include "pch.h"
 #include <optional>
 
+#include "Core/Ref.h"
 
 
 struct QueueFamilyIndices {
@@ -27,7 +28,7 @@ const std::vector<const char*> VALIDATION_LAYERS = {
     "VK_LAYER_KHRONOS_validation"
 };
 
-class VulkanDeviceSelector {
+class VulkanDeviceSelector : public Thryve::Core::ReferenceCounted {
 public:
     // Constructor and Destructor
     VulkanDeviceSelector(VkInstance instance, VkSurfaceKHR surface);

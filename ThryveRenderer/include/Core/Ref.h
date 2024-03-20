@@ -69,7 +69,7 @@ namespace Thryve::Core {
          *
          * @param nullptr_ The nullptr parameter.
          */
-        explicit SharedRef(std::nullptr_t nullptr_) : m_Instance{nullptr} {
+        SharedRef(std::nullptr_t nullptr_) : m_Instance{nullptr} {
         };
 
         /**
@@ -83,7 +83,7 @@ namespace Thryve::Core {
          * @note The BaseType class must be derived from the ReferenceCounted abstract class, otherwise a compilation error will occur.
          *       Be sure to derive the BaseType class from ReferenceCounted abstract class to enable reference counting.
          */
-        explicit SharedRef(BaseType* rawPointer) : m_Instance{rawPointer} {
+        SharedRef(BaseType* rawPointer) : m_Instance{rawPointer} {
             static_assert(std::is_base_of_v<ReferenceCounted, BaseType>
                           , "Baseclass does not implement ReferenceCounting, be sure to derive it from ReferenceCounting abstract class!")
                 ;
@@ -96,7 +96,7 @@ namespace Thryve::Core {
          * @param other The input SharedRef object of a different derived type.
          */
         template <typename DerivedType>
-        explicit SharedRef(const SharedRef<DerivedType>& other) {
+        SharedRef(const SharedRef<DerivedType>& other) {
             if (this != &other)
             {
                 m_Instance = static_cast<BaseType*>(other.m_Instance);
@@ -105,11 +105,8 @@ namespace Thryve::Core {
         }
 
         template <typename DerivedType>
-        explicit SharedRef(const SharedRef<DerivedType>&& other) {
-            if (this != &other)
-            {
-                m_Instance = std::exchange(other.m_Instance, nullptr);
-            }
+        SharedRef(const SharedRef<DerivedType>&& other) {
+            m_Instance = (BaseType*)other.m_Instance;
         }
 
         /**
@@ -179,16 +176,14 @@ namespace Thryve::Core {
 
         template<typename DerivedType>
         SharedRef& operator=(const SharedRef<DerivedType>&& other) {
-            if (other != this)
-            {
-                DecrementReferenceCount();
-                m_Instance = std::exchange(other.m_Instance, nullptr);
-            }
+            DecrementReferenceCount();
+            m_Instance = (BaseType*)other.m_Instance;
+            other.m_Instance =  nullptr;
             return *this;
         }
 
-        explicit operator bool() {return m_Instance != nullptr;}
-        explicit operator bool() const {return m_Instance != nullptr;}
+        operator bool() {return m_Instance != nullptr;}
+        operator bool() const {return m_Instance != nullptr;}
 
         BaseType* operator->() { return m_Instance; }
         const BaseType* operator->() const { return m_Instance; }

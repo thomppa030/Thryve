@@ -4,8 +4,9 @@
 #pragma once
 
 #include "pch.h"
+#include "Core/Ref.h"
 
-class VulkanInstance {
+class VulkanInstance : public Thryve::Core::ReferenceCounted {
 public:
     VulkanInstance();
     ~VulkanInstance();

@@ -13,6 +13,7 @@ set(PRECOMPILE_HEADER "include/pch.h")
 
 # Define the library target
 add_library(ThryveRenderer)
+
 target_precompile_headers(ThryveRenderer PRIVATE ${PRECOMPILE_HEADER})
 
 # Include directories for the ThryveRenderer target
