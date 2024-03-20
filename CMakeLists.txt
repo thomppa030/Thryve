@@ -49,6 +49,6 @@ add_executable(Thryve main.cpp
         ThryveApplication.cpp
         ThryveApplication.h
         GraphicsContext.h
-        IGraphicsContext.h)
+        IRenderContext.h)
 
 target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} ThryveRenderer glfw glm::glm spdlog::spdlog imgui)

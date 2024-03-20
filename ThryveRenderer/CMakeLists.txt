@@ -12,10 +12,7 @@ find_package(Vulkan REQUIRED)
 set(PRECOMPILE_HEADER "include/pch.h")
 
 # Define the library target
-add_library(ThryveRenderer
-        src/Vulkan/VulkanTextureImage.cpp
-        include/Vulkan/VulkanTextureImage.h
-        include/utils/ImageUtils.h)
+add_library(ThryveRenderer)
 target_precompile_headers(ThryveRenderer PRIVATE ${PRECOMPILE_HEADER})
 
 # Include directories for the ThryveRenderer target
@@ -27,6 +24,7 @@ target_include_directories(ThryveRenderer
         ${Vulkan_INCLUDE_DIRS}
         external/glm
         external/stb
+        external/VulkanMemoryAllocator/include
 )
 
 # Source and header files for the ThryveRenderer target
@@ -40,10 +38,12 @@ target_link_libraries(ThryveRenderer
         glfw
         glm::glm
         spdlog::spdlog
+        VulkanMemoryAllocator
 )
 
 # Add external dependencies as subdirectories
 add_subdirectory(external/glm)
+add_subdirectory(external/VulkanMemoryAllocator)
 
 
 # Catch2 is header-only; consider using FetchContent or add it to the target_include_directories where it's used.
