@@ -8,13 +8,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Use modern CMake practices for finding and linking to libraries
 find_package(Vulkan REQUIRED)
 
-# Precompiled header
-set(PRECOMPILE_HEADER "include/pch.h")
 
 # Define the library target
 add_library(ThryveRenderer)
 
+# Precompiled header
+set(PRECOMPILE_HEADER "include/pch.h")
 target_precompile_headers(ThryveRenderer PRIVATE ${PRECOMPILE_HEADER})
+
 
 # Include directories for the ThryveRenderer target
 target_include_directories(ThryveRenderer

@@ -7,6 +7,8 @@ find_package(Vulkan REQUIRED)
 
 include_directories(config)
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
 # Define the path to the shaders directory relative to this CMakeLists.txt
 set(SHADERS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThryveRenderer/shaders")
 set(RESOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThryveRenderer/resources")
@@ -49,6 +51,8 @@ add_executable(Thryve main.cpp
         ThryveApplication.cpp
         ThryveApplication.h
         GraphicsContext.h
-        IRenderContext.h)
+        IRenderContext.h
+        ThryveRenderer/src/pch.cpp)
 
 target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} ThryveRenderer glfw glm::glm spdlog::spdlog imgui)
+

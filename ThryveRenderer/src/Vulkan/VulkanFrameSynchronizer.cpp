@@ -5,9 +5,12 @@
 
 #include <iostream>
 
+#include "../../../GraphicsContext.h"
+#include "Vulkan/VulkanContext.h"
 #include "utils/VkDebugUtils.h"
 
-VulkanFrameSynchronizer::VulkanFrameSynchronizer(const VkDevice device, const uint32_t maxFramesInFlight, const VkQueue graphicsQueue) : m_device(device), m_maxFramesInFlight(maxFramesInFlight), m_graphicsQueue(graphicsQueue){
+VulkanFrameSynchronizer::VulkanFrameSynchronizer(const uint32_t maxFramesInFlight) : m_maxFramesInFlight(maxFramesInFlight){
+    m_device = Thryve::Rendering::VulkanContext::GetCurrentDevice()->GetLogicalDevice();
     m_syncObjects.resize(maxFramesInFlight);
     CreateSyncObjects();
 }
@@ -64,7 +67,7 @@ bool VulkanFrameSynchronizer::SubmitCommandBuffers(const VkCommandBuffer* comman
     // Reset the in-flight fence before submitting the command buffer
     vkResetFences(m_device, 1, &m_syncObjects[currentFrame].in_flight_fence);
 
-    if (vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_syncObjects[currentFrame].in_flight_fence) != VK_SUCCESS) {
+    if (vkQueueSubmit(Thryve::Rendering::VulkanContext::GetCurrentDevice()->GetGraphicsQueue(), 1, &submitInfo, m_syncObjects[currentFrame].in_flight_fence) != VK_SUCCESS) {
         std::cerr << "Failed to submit draw command buffer!" << std::endl;
         return false;
     }

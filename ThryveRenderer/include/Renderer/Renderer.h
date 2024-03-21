@@ -5,7 +5,7 @@
 #pragma once
 #include <functional>
 
-#include "../../IRenderContext.h"
+#include "IRenderContext.h"
 #include "Core/App.h"
 
 

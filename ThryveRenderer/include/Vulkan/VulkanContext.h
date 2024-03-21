@@ -3,11 +3,12 @@
 //
 #pragma once
 
-#include "VulkanDeviceSelector.h"
-#include "VulkanInstance.h"
-#include "VulkanWindowContext.h"
 #include "Renderer/RenderContext.h"
-#include "Renderer/Renderer.hpp"
+#include "Renderer/Renderer.h"
+#include "Vulkan/VulkanInstance.h"
+#include "Vulkan/VulkanRenderContext.h"
+#include "Vulkan/VulkanWindowContext.h"
+#include "VulkanDeviceSelector.h"
 
 const std::vector<const char *> DEVICE_EXTENSIONS = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -18,6 +19,8 @@ constexpr bool ENABLE_VALIDATION_LAYERS = false;
 #else
 constexpr bool ENABLE_VALIDATION_LAYERS = true;
 #endif
+
+class VulkanRenderContext;
 
 namespace Thryve::Rendering {
     class VulkanContext final : public RenderContext {
@@ -33,13 +36,18 @@ namespace Thryve::Rendering {
         static Core::SharedRef<VulkanContext> Get() {
             return static_cast<Core::SharedRef<VulkanContext>>(Renderer::GetContext());
         }
+        static Core::SharedRef<VulkanDeviceSelector> GetCurrentDevice() {
+            return Get()->GetDevice();
+        }
 
         void Init() override;
+        void Run() override;
 
     private:
         Core::SharedRef<VulkanWindowContext> m_windowContext;
         Core::SharedRef<VulkanDeviceSelector> m_device;
         Core::SharedRef<VulkanInstance> m_vulkanInstance;
+        Core::SharedRef<VulkanRenderContext> m_renderContext;
 
         inline static VkInstance s_Instance;
         inline static VkSurfaceKHR s_Surface;

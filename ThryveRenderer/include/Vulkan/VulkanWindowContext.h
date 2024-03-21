@@ -4,25 +4,26 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
-
 #include "Core/Ref.h"
 
+namespace Thryve::Rendering {
 
-class VulkanWindowContext : public Thryve::Core::ReferenceCounted {
-public:
-    VulkanWindowContext(const char* windowTitle, int width, int height);
-    ~VulkanWindowContext();
+    class VulkanWindowContext final : public Core::ReferenceCounted {
+    public:
+        VulkanWindowContext(const char *windowTitle, int width, int height);
+        ~VulkanWindowContext() override;
 
-    [[nodiscard]] GLFWwindow *GetWindow() const { return m_window; }
-    VkSurfaceKHR CreateSurface(VkInstance instance) const;
+        [[nodiscard]] GLFWwindow *GetWindow() const { return m_window; }
+        VkSurfaceKHR CreateSurface() const;
 
-    bool bFrameBufferResized{false};
+        bool bFrameBufferResized{false};
+    private:
+        GLFWwindow *m_window;
+        int m_width;
+        int m_height;
+        const char *m_windowTitle;
 
-private:
-    GLFWwindow* m_window;
-    int m_width;
-    int m_height;
-    const char* m_windowTitle;
+        static void FrameBufferResizeCallback(GLFWwindow *window, int width, int height);
+    };
 
-    static void FrameBufferResizeCallback(GLFWwindow* window, int width, int height);
-};
+} // namespace Thryve::Rendering

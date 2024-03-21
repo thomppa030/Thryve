@@ -5,10 +5,10 @@
 #include "Vulkan/VulkanTextureImage.h"
 
 #include <complex>
-#include <Config.h>
 #include "stb_image.h"
 
 #include "utils/ImageUtils.h"
+#include "utils/VkDebugUtils.h"
 #include "utils/VulkanBufferUtils.h"
 
 
@@ -43,14 +43,14 @@ void VulkanTextureImage::createTextureImage(const std::string &fileName) {
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
 
-    BufferCreationInfo stagingBufferCreateInfo {};
-    stagingBufferCreateInfo.device = m_device;
-    stagingBufferCreateInfo.physicalDevice = m_PhysicalDevice;
-    stagingBufferCreateInfo.size = imageSize;
-    stagingBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-    stagingBufferCreateInfo.properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    BufferCreationInfo _stagingBufferCreateInfo {};
+    _stagingBufferCreateInfo.Device = m_device;
+    _stagingBufferCreateInfo.PhysicalDevice = m_PhysicalDevice;
+    _stagingBufferCreateInfo.Size = imageSize;
+    _stagingBufferCreateInfo.Usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    _stagingBufferCreateInfo.Properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-    VulkanBufferUtils::createBuffer(stagingBufferCreateInfo, stagingBuffer, stagingBufferMemory);
+    VulkanBufferUtils::CreateBuffer(_stagingBufferCreateInfo, stagingBuffer, stagingBufferMemory);
 
     void* data;
     vkMapMemory(m_device, stagingBufferMemory, 0, imageSize,0, &data);

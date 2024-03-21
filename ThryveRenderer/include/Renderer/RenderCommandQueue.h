@@ -2,6 +2,7 @@
 // Created by kprie on 19.03.2024.
 //
 #pragma once
+#include "pch.h"
 
 namespace Thryve::Rendering {
     class RenderCommandQueue {

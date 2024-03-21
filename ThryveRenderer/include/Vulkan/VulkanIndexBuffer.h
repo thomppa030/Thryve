@@ -7,8 +7,7 @@
 namespace Thryve::Rendering {
     class VulkanIndexBuffer {
     public:
-        VulkanIndexBuffer(VkDevice device, VkPhysicalDevice physicalDevice, VkCommandPool commandPool
-                          , VkQueue graphicsQueue);
+        VulkanIndexBuffer(VkCommandPool commandPool);
 
         ~VulkanIndexBuffer();
 
@@ -26,7 +25,6 @@ namespace Thryve::Rendering {
         VkDevice m_device;
         VkPhysicalDevice m_physicalDevice;
         VkCommandPool m_commandPool;
-        VkQueue m_graphicsQueue;
         VkBuffer m_indexBuffer;
         VkDeviceMemory m_indexBufferMemory;
         uint32_t m_indexCount = 0;

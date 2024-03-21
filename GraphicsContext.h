@@ -19,7 +19,7 @@ public:
     explicit GraphicsContext(const Backend backend) {
         switch (backend) {
             case Backend::Vulkan:
-                m_context = std::make_unique<Thryve::Rendering::VulkanRenderContext>();
+                // m_context = std::make_unique<Thryve::Rendering::VulkanRenderContext>();
             break;
             case Backend::OpenGL:
                 // m_context = std::make_unique<OpenGLRenderContext>();

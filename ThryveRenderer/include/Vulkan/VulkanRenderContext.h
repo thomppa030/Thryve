@@ -2,40 +2,38 @@
 // Created by kprie on 14.03.2024.
 //
 #pragma once
-#include "pch.h"
+#include "GLFW/glfw3.h"
 #include "ThreadPool.h"
-#include "VulkanFrameSynchronizer.h"
-#include "VulkanRenderPassBuilder.h"
 #include "Vertex2D.h"
 #include "VulkanCommandBuffer.h"
 #include "VulkanCommandPoolManager.h"
 #include "VulkanDescriptorManager.h"
-#include "VulkanInstance.h"
 #include "VulkanDeviceSelector.h"
+#include "VulkanFrameSynchronizer.h"
 #include "VulkanIndexBuffer.h"
 #include "VulkanPipeline.h"
+#include "VulkanRenderPassBuilder.h"
 #include "VulkanSwapChain.h"
 #include "VulkanTextureImage.h"
 #include "VulkanVertexBuffer.h"
 #include "VulkanWindowContext.h"
-#include "../IRenderContext.h"
-#include "GLFW/glfw3.h"
 #include "glm/ext/matrix_transform.hpp"
+#include "pch.h"
 
 constexpr uint32_t WIDTH = 1920;
 constexpr uint32_t HEIGHT = 1080;
 
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
-const std::vector<const char *> DEVICE_EXTENSIONS = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME
-};
-
-#ifdef NDEBUG
-constexpr bool ENABLE_VALIDATION_LAYERS = false;
-#else
-constexpr bool ENABLE_VALIDATION_LAYERS = true;
-#endif
+// const std::vector<const char *> DEVICE_EXTENSIONS = {
+//     VK_KHR_SWAPCHAIN_EXTENSION_NAME
+// };
+//
+// #ifdef NDEBUG
+// constexpr bool ENABLE_VALIDATION_LAYERS = false;
+// #else
+// constexpr bool ENABLE_VALIDATION_LAYERS = true;
+// #endif
 
 const std::vector<Vertex3D> VERTICES_3D = {
     {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f},{1.0f, 0.0f}},
@@ -67,12 +65,12 @@ const std::vector<uint32_t> INDICES_3D = {
 
 namespace Thryve::Rendering
 {
-    class VulkanRenderContext final : public IRenderContext {
+    class VulkanRenderContext final : public Core::ReferenceCounted {
     public:
         VulkanRenderContext();
         ~VulkanRenderContext() override;
 
-        void Run() override;
+        void Run();
 
     private:
         // Window management
@@ -80,10 +78,10 @@ namespace Thryve::Rendering
         std::unique_ptr<VulkanWindowContext> m_windowContext;
 
         // Vulkan core components
-        std::unique_ptr<VulkanInstance> m_instance;
+        VkInstance m_instance;
         VkSurfaceKHR m_surface;
         VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
-        std::unique_ptr<VulkanDeviceSelector> m_deviceSelector;
+        Core::SharedRef<VulkanDeviceSelector> m_deviceSelector;
         VkDevice m_device;
 
         // Swap chain and rendering setup

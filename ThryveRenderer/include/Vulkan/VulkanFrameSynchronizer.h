@@ -12,7 +12,7 @@ public:
         VkFence in_flight_fence;
     };
 
-    VulkanFrameSynchronizer(VkDevice device, uint32_t maxFramesInFlight, VkQueue graphicsQueue);
+    VulkanFrameSynchronizer(uint32_t maxFramesInFlight);
     ~VulkanFrameSynchronizer();
 
     [[nodiscard]] bool WaitForFences(uint32_t currentFrame) const;
@@ -32,7 +32,6 @@ private:
     VkDevice m_device{};
     std::vector<FrameSyncObjects> m_syncObjects;
     uint32_t m_maxFramesInFlight{};
-    VkQueue m_graphicsQueue;
 
     void CreateSyncObjects();
     void DestroySyncObjects() const;

@@ -6,8 +6,8 @@
 
 #include <iostream>
 
-#include "Vulkan/VulkanDeviceSelector.h"
 #include "GLFW/glfw3.h"
+#include "Vulkan/VulkanDeviceSelector.h"
 
 VulkanSwapChain::VulkanSwapChain(VulkanDeviceSelector* deviceSelector, VkSurfaceKHR surface, GLFWwindow* window) : m_deviceSelector(
         deviceSelector), m_surface(surface), m_renderPass(nullptr), m_swapChain(nullptr), m_swapChainImageFormat(),

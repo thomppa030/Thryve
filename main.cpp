@@ -5,11 +5,11 @@
 
 int main() {
 
-    try {
-        auto* _coreApp = new Thryve::Core::App();
-        const ThryveApplication _app;
+    auto* _coreApp = new Thryve::Core::App();
 
-        _app.Run();
+    try {
+        _coreApp->Run();
+
     } catch (const std::runtime_error& e) {
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
@@ -20,6 +20,8 @@ int main() {
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
+
+    delete _coreApp;
 
     return EXIT_SUCCESS;
 }

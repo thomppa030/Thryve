@@ -3,16 +3,16 @@
 //
 
 #include "Vulkan/VulkanIndexBuffer.h"
+
+#include "Vulkan/VulkanContext.h"
 #include "utils/VulkanBufferUtils.h"
 
 namespace Thryve::Rendering {
-    VulkanIndexBuffer::VulkanIndexBuffer(const VkDevice device, const VkPhysicalDevice physicalDevice
-                                         , const VkCommandPool commandPool, const VkQueue graphicsQueue) :
-        m_device(device),
-        m_physicalDevice(physicalDevice),
-        m_commandPool(commandPool),
-        m_graphicsQueue(graphicsQueue)
+    VulkanIndexBuffer::VulkanIndexBuffer(const VkCommandPool commandPool) :
+        m_commandPool(commandPool), m_indexBuffer{nullptr}, m_indexBufferMemory{nullptr}
     {
+        m_device = VulkanContext::GetCurrentDevice()->GetLogicalDevice();
+        m_physicalDevice = VulkanContext::GetCurrentDevice()->GetPhysicalDevice();
     }
 
     VulkanIndexBuffer::~VulkanIndexBuffer()
@@ -35,16 +35,16 @@ namespace Thryve::Rendering {
 
         // Encapsulate staging buffer creation parameters, ensuring zero initialization
         BufferCreationInfo _stagingBufferInfo = {};
-        _stagingBufferInfo.device = m_device;
-        _stagingBufferInfo.physicalDevice = m_physicalDevice;
-        _stagingBufferInfo.size = _bufferSize;
-        _stagingBufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-        _stagingBufferInfo.properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+        _stagingBufferInfo.Device = m_device;
+        _stagingBufferInfo.PhysicalDevice = m_physicalDevice;
+        _stagingBufferInfo.Size = _bufferSize;
+        _stagingBufferInfo.Usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        _stagingBufferInfo.Properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
         VkBuffer _stagingBuffer;
         VkDeviceMemory _stagingBufferMemory;
         // Create staging buffer
-        VulkanBufferUtils::createBuffer(_stagingBufferInfo, _stagingBuffer, _stagingBufferMemory);
+        VulkanBufferUtils::CreateBuffer(_stagingBufferInfo, _stagingBuffer, _stagingBufferMemory);
 
         // Map and copy data to the staging buffer
         void *_data = nullptr; // Ensure pointer is initialized to null
@@ -54,27 +54,27 @@ namespace Thryve::Rendering {
 
         // Encapsulate index buffer creation parameters, ensuring zero initialization
         BufferCreationInfo _indexBufferInfo = {};
-        _indexBufferInfo.device = m_device;
-        _indexBufferInfo.physicalDevice = m_physicalDevice;
-        _indexBufferInfo.size = _bufferSize;
-        _indexBufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-        _indexBufferInfo.properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+        _indexBufferInfo.Device = m_device;
+        _indexBufferInfo.PhysicalDevice = m_physicalDevice;
+        _indexBufferInfo.Size = _bufferSize;
+        _indexBufferInfo.Usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+        _indexBufferInfo.Properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
         // Create the index buffer with device local memory
-        VulkanBufferUtils::createBuffer(_indexBufferInfo, m_indexBuffer, m_indexBufferMemory);
+        VulkanBufferUtils::CreateBuffer(_indexBufferInfo, m_indexBuffer, m_indexBufferMemory);
 
         // Encapsulate buffer copying parameters, ensuring zero initialization
-        BufferCopyInfo copyInfo = {};
-        copyInfo.device = m_device;
-        copyInfo.physicalDevice = m_physicalDevice;
-        copyInfo.commandPool = m_commandPool;
-        copyInfo.transferQueue = m_graphicsQueue;
-        copyInfo.srcBuffer = _stagingBuffer;
-        copyInfo.dstBuffer = m_indexBuffer;
-        copyInfo.size = _bufferSize;
+        BufferCopyInfo _copyInfo = {};
+        _copyInfo.Device = m_device;
+        _copyInfo.PhysicalDevice = m_physicalDevice;
+        _copyInfo.TransferQueue = VulkanContext::GetCurrentDevice()->GetGraphicsQueue();
+        _copyInfo.CommandPool = m_commandPool;
+        _copyInfo.SrcBuffer = _stagingBuffer;
+        _copyInfo.DstBuffer = m_indexBuffer;
+        _copyInfo.Size = _bufferSize;
 
         // Copy data from the staging buffer to the index buffer
-        VulkanBufferUtils::CopyBuffer(copyInfo);
+        VulkanBufferUtils::CopyBuffer(_copyInfo);
 
         // Clean up the staging buffer
         vkDestroyBuffer(m_device, _stagingBuffer, nullptr);

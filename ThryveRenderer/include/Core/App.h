@@ -10,12 +10,16 @@ namespace Thryve::Core {
     class App {
     public:
         App();
+        ~App();
         static App& Get() { return *s_Instance; }
 
         [[nodiscard]] Core::SharedRef<Rendering::RenderContext> GetRenderContext() const { return m_renderContext; };
 
+        void Run();
+
     private:
         static App* s_Instance;
+        
         Core::SharedRef<Rendering::RenderContext> m_renderContext{nullptr};
     };
 } // Thryve

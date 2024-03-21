@@ -8,21 +8,21 @@
 #include "../pch.h"
 
 struct BufferCreationInfo {
-    VkDevice device;
-    VkPhysicalDevice physicalDevice;
-    VkDeviceSize size;
-    VkBufferUsageFlags usage;
-    VkMemoryPropertyFlags properties;
+    VkDevice Device;
+    VkPhysicalDevice PhysicalDevice;
+    VkDeviceSize Size;
+    VkBufferUsageFlags Usage;
+    VkMemoryPropertyFlags Properties;
 };
 
 struct BufferCopyInfo {
-    VkDevice device;
-    VkPhysicalDevice physicalDevice;
-    VkCommandPool commandPool;
-    VkQueue transferQueue;
-    VkBuffer srcBuffer;
-    VkBuffer dstBuffer;
-    VkDeviceSize size;
+    VkDevice Device;
+    VkPhysicalDevice PhysicalDevice;
+    VkCommandPool CommandPool;
+    VkQueue TransferQueue;
+    VkBuffer SrcBuffer;
+    VkBuffer DstBuffer;
+    VkDeviceSize Size;
 };
 
 class VulkanBufferUtils {
@@ -41,36 +41,36 @@ public:
         throw std::runtime_error("failed to find suitable memory type!");
     }
 
-    static void createBuffer(const BufferCreationInfo& creationInfo, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
+    static void CreateBuffer(const BufferCreationInfo& creationInfo, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
         VkBufferCreateInfo bufferInfo{};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufferInfo.size = creationInfo.size;
-        bufferInfo.usage = creationInfo.usage;
+        bufferInfo.size = creationInfo.Size;
+        bufferInfo.usage = creationInfo.Usage;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        VK_CALL(vkCreateBuffer(creationInfo.device, &bufferInfo, nullptr, &buffer));
+        VK_CALL(vkCreateBuffer(creationInfo.Device, &bufferInfo, nullptr, &buffer));
 
         VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(creationInfo.device, buffer, &memRequirements);
+        vkGetBufferMemoryRequirements(creationInfo.Device, buffer, &memRequirements);
 
         VkMemoryAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = VulkanBufferUtils::FindMemoryType(creationInfo.physicalDevice,memRequirements.memoryTypeBits, creationInfo.properties);
+        allocInfo.memoryTypeIndex = VulkanBufferUtils::FindMemoryType(creationInfo.PhysicalDevice,memRequirements.memoryTypeBits, creationInfo.Properties);
 
-        VK_CALL(vkAllocateMemory(creationInfo.device, &allocInfo, nullptr, &bufferMemory));
+        VK_CALL(vkAllocateMemory(creationInfo.Device, &allocInfo, nullptr, &bufferMemory));
 
-        VK_CALL(vkBindBufferMemory(creationInfo.device, buffer, bufferMemory, 0));
+        VK_CALL(vkBindBufferMemory(creationInfo.Device, buffer, bufferMemory, 0));
     }
 
     static void CopyBuffer(const BufferCopyInfo& copyInfo) {
-        const VkCommandBuffer commandBuffer = SingleTimeCommandUtil::BeginSingleTimeCommands(copyInfo.device, copyInfo.commandPool);
+        const VkCommandBuffer commandBuffer = SingleTimeCommandUtil::BeginSingleTimeCommands(copyInfo.Device, copyInfo.CommandPool);
 
         VkBufferCopy copyRegion{};
-        copyRegion.size = copyInfo.size;
-        vkCmdCopyBuffer(commandBuffer, copyInfo.srcBuffer, copyInfo.dstBuffer, 1, &copyRegion);
+        copyRegion.size = copyInfo.Size;
+        vkCmdCopyBuffer(commandBuffer, copyInfo.SrcBuffer, copyInfo.DstBuffer, 1, &copyRegion);
 
-        SingleTimeCommandUtil::EndSingleTimeCommands(copyInfo.device, copyInfo.commandPool, copyInfo.transferQueue, commandBuffer);
+        SingleTimeCommandUtil::EndSingleTimeCommands(copyInfo.Device, copyInfo.CommandPool, copyInfo.TransferQueue, commandBuffer);
     }
 
 };

@@ -14,6 +14,7 @@ namespace Thryve::Rendering {
 		~RenderContext() override = default;
 
 		virtual void Init() = 0;
+		virtual void Run() = 0;
 
 		static Core::SharedRef<RenderContext> Create();
 	};

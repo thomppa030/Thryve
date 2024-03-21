@@ -3,8 +3,8 @@
 //
 #pragma once
 
-#include "pch.h"
 #include <optional>
+#include "pch.h"
 
 #include "Core/Ref.h"
 
@@ -28,11 +28,11 @@ const std::vector<const char*> VALIDATION_LAYERS = {
     "VK_LAYER_KHRONOS_validation"
 };
 
-class VulkanDeviceSelector : public Thryve::Core::ReferenceCounted {
+class VulkanDeviceSelector final : public Thryve::Core::ReferenceCounted {
 public:
     // Constructor and Destructor
     VulkanDeviceSelector(VkInstance instance, VkSurfaceKHR surface);
-    ~VulkanDeviceSelector();
+    ~VulkanDeviceSelector() override;
 
     // Delete copy constructor and copy assignment operator
     VulkanDeviceSelector(const VulkanDeviceSelector&) = delete;
@@ -62,7 +62,7 @@ private:
 
     VkQueue m_graphicsQueue;
     VkQueue m_presentQueue;
-    int m_validationLayers;
+    int m_validationLayers{};
 
     bool IsDeviceSuitable(VkPhysicalDevice device, const std::vector<const char*>& deviceExtensions);
     bool CheckDeviceExtensionSupport(VkPhysicalDevice device, const std::vector<const char*>& deviceExtensions);

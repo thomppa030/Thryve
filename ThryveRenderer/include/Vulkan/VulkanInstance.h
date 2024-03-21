@@ -6,38 +6,43 @@
 #include "pch.h"
 #include "Core/Ref.h"
 
-class VulkanInstance : public Thryve::Core::ReferenceCounted {
-public:
-    VulkanInstance();
-    ~VulkanInstance();
+namespace Thryve::Rendering {
 
-    // Prevent copy or move semantics for simplicity
-    VulkanInstance(const VulkanInstance&) = delete;
-    VulkanInstance& operator=(const VulkanInstance&) = delete;
-    VulkanInstance(VulkanInstance&&) = delete;
-    VulkanInstance& operator=(VulkanInstance&&) = delete;
+    class VulkanInstance final : public Core::ReferenceCounted {
+    public:
+        VulkanInstance();
+        ~VulkanInstance() override;
 
-    void Init(const std::string& applicationName);
+        // Prevent copy or move semantics for simplicity
+        VulkanInstance(const VulkanInstance &) = delete;
+        VulkanInstance &operator=(const VulkanInstance &) = delete;
+        VulkanInstance(VulkanInstance &&) = delete;
+        VulkanInstance &operator=(VulkanInstance &&) = delete;
 
-    [[nodiscard]] VkInstance GetInstance() const {
-        return m_instance;
-    }
+        void Init(const std::string &applicationName);
 
-private:
-    VkInstance m_instance = VK_NULL_HANDLE;
-    bool m_enableValidationLayers;
-    std::vector<const char*> m_validationLayers;
-    std::vector<const char*> m_requiredExtensions;
+        [[nodiscard]] VkInstance GetInstance() const { return m_instance; }
 
-    void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
+    private:
+        VkInstance m_instance = VK_NULL_HANDLE;
+        bool m_enableValidationLayers;
+        std::vector<const char *> m_validationLayers;
+        std::vector<const char *> m_requiredExtensions;
 
-    void CreateInstance(const std::string& applicationName);
+        void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
 
-    [[nodiscard]] bool CheckValidationLayerSupport() const;
-    [[nodiscard]] std::vector<const char*> GetRequiredExtensions() const;
-    void SetupDebugMessenger();
-    static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
+        void CreateInstance(const std::string &applicationName);
 
-    VkDebugUtilsMessengerEXT debugMessenger;
-};
+        [[nodiscard]] bool CheckValidationLayerSupport() const;
+        [[nodiscard]] std::vector<const char *> GetRequiredExtensions() const;
+        void SetupDebugMessenger();
+        static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                                            VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                                            const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+                                                            void *pUserData);
 
+        VkDebugUtilsMessengerEXT debugMessenger;
+    };
+
+
+} // namespace myNamespace

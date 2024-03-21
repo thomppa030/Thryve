@@ -9,14 +9,15 @@
 #include <iostream>
 
 #include "Config.h"
-#include "stb_image.h"
-#include "glm/ext/matrix_clip_space.hpp"
-#include "utils/VkDebugUtils.h"
-#include "utils/VulkanBufferUtils.h"
+#include "Vulkan/VulkanContext.h"
 #include "Vulkan/VulkanDescriptorManager.h"
 #include "Vulkan/VulkanDescriptorSetBuilder.h"
 #include "Vulkan/VulkanDeviceSelector.h"
 #include "Vulkan/VulkanUniformBuffer.h"
+#include "glm/ext/matrix_clip_space.hpp"
+#include "stb_image.h"
+#include "utils/VkDebugUtils.h"
+#include "utils/VulkanBufferUtils.h"
 
 namespace Thryve::Rendering {
     VulkanRenderContext::VulkanRenderContext(): m_window(nullptr), m_surface(nullptr), m_device(nullptr),
@@ -33,12 +34,11 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::InitInstance() {
-        m_instance = std::make_unique<VulkanInstance>();
-        m_instance->Init("ThryveRenderer");
+        m_instance = VulkanContext::Get()->GetInstance();
     }
 
     void VulkanRenderContext::PickSuitableDevices() {
-        m_deviceSelector = std::make_unique<VulkanDeviceSelector>(m_instance->GetInstance(), m_surface);
+        m_deviceSelector = VulkanContext::GetCurrentDevice();
         m_deviceSelector->PickSuitableDevice(DEVICE_EXTENSIONS, ENABLE_VALIDATION_LAYERS);
         m_physicalDevice = m_deviceSelector->GetPhysicalDevice();
         m_device = m_deviceSelector->GetLogicalDevice();
@@ -158,7 +158,7 @@ namespace Thryve::Rendering {
         InitInstance();
         CreateSurface();
         PickSuitableDevices();
-        m_swapChain = std::make_unique<VulkanSwapChain>(m_deviceSelector.get(),m_surface,m_window);
+        m_swapChain = std::make_unique<VulkanSwapChain>(m_deviceSelector.Raw(),m_surface,m_window);
         CreateSwapChain();
         InitRenderPassFactory();
         m_renderPass = m_renderPassFactory->GetRenderPass("default")->GetRenderPass();
@@ -214,14 +214,14 @@ namespace Thryve::Rendering {
 
         vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
 
-        m_deviceSelector.reset();
-        vkDestroySurfaceKHR(m_instance->GetInstance(), m_surface, nullptr);
-        m_instance.reset();
+        // m_deviceSelector.Reset();
+        // vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+        // vkDestroyInstance(m_instance, nullptr);
         m_windowContext.reset();
     }
 
     void VulkanRenderContext::CreateSurface() {
-        m_surface = m_windowContext->CreateSurface(m_instance->GetInstance());
+        m_surface = m_windowContext->CreateSurface();
     }
 
     void VulkanRenderContext::CreateGraphicsPipeline() {
@@ -244,12 +244,12 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::CreateVertexBuffer() {
-        m_vulkanVertexBuffer = std::make_unique<VulkanVertexBuffer<Vertex3D>>(m_device, m_physicalDevice, m_commandPool, m_deviceSelector->GetGraphicsQueue());
+        m_vulkanVertexBuffer = std::make_unique<VulkanVertexBuffer<Vertex3D>>(m_device, m_physicalDevice,m_commandPool, m_deviceSelector->GetGraphicsQueue());
         m_vulkanVertexBuffer->Create(VERTICES_3D);
     }
 
     void VulkanRenderContext::CreateIndexBuffer() {
-        m_indexBuffer = std::make_unique<VulkanIndexBuffer>(m_device, m_physicalDevice, m_commandPool, m_deviceSelector->GetGraphicsQueue());
+        m_indexBuffer = std::make_unique<VulkanIndexBuffer>(m_commandPool);
         m_indexBuffer->Create(INDICES_3D);
     }
 
@@ -260,7 +260,7 @@ namespace Thryve::Rendering {
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             constexpr VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-            VulkanBufferUtils::createBuffer({m_device, m_physicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT}, m_uniformBuffers[i], m_uniformBuffersMemory[i]);
+            VulkanBufferUtils::CreateBuffer({ m_device, m_physicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT}, m_uniformBuffers[i], m_uniformBuffersMemory[i]);
 
             VK_CALL(vkMapMemory(m_device, m_uniformBuffersMemory[i], 0, bufferSize, 0, &m_uniformBuffersMapped[i]));
         }
@@ -326,7 +326,7 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::CreateSyncObjects() {
-        m_FrameSynchronizer = std::make_unique<VulkanFrameSynchronizer>(m_device, MAX_FRAMES_IN_FLIGHT, m_deviceSelector->GetGraphicsQueue());
+        m_FrameSynchronizer = std::make_unique<VulkanFrameSynchronizer>(MAX_FRAMES_IN_FLIGHT);
     }
 
     void VulkanRenderContext::UpdateUniformBuffer(const uint32_t currentImage) const {

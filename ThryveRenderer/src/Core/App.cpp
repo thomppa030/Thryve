@@ -5,11 +5,20 @@
 #include "Core/App.h"
 
 namespace Thryve::Core {
-    Core::App* Core::App::s_Instance = nullptr;
+    App* App::s_Instance = nullptr;
 
-    App::App() {
+    App::App()
+    {
         s_Instance = this;
 
         m_renderContext = Rendering::RenderContext::Create();
     }
-}
+    App::~App()
+    {
+        m_renderContext.Reset();
+    }
+    void App::Run()
+    {
+        m_renderContext->Run();
+    }
+} // namespace Thryve::Core

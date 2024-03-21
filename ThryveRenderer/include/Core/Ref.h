@@ -97,16 +97,14 @@ namespace Thryve::Core {
          */
         template <typename DerivedType>
         SharedRef(const SharedRef<DerivedType>& other) {
-            if (this != &other)
-            {
-                m_Instance = static_cast<BaseType*>(other.m_Instance);
+                m_Instance = dynamic_cast<BaseType*>(other.m_Instance);
                 IncrementReferenceCount();
-            }
         }
 
         template <typename DerivedType>
         SharedRef(const SharedRef<DerivedType>&& other) {
             m_Instance = (BaseType*)other.m_Instance;
+            other.m_Instance = nullptr;
         }
 
         /**
@@ -121,7 +119,7 @@ namespace Thryve::Core {
          */
         static SharedRef<BaseType> CopyWithoutIncrement(const SharedRef<BaseType>& other) {
             SharedRef<BaseType> _result = nullptr;
-            _result.m_Instance = other.m_Instance;
+            _result->m_Instance = other.m_Instance;
             return _result;
         }
 
@@ -149,6 +147,18 @@ namespace Thryve::Core {
             return *this;
         }
 
+        SharedRef& operator=(const SharedRef<BaseType>& other)
+        {
+            if (this == &other)
+                return *this;
+
+            other.IncrementReferenceCount();
+            DecrementReferenceCount();
+
+            m_Instance = other.m_Instance;
+            return *this;
+        }
+
         /**
          * @brief Assignment operator for SharedRef.
          *
@@ -165,12 +175,9 @@ namespace Thryve::Core {
          */
         template<typename DerivedType>
         SharedRef& operator=(const SharedRef<DerivedType>& other) {
-            if (other.m_Instance != m_Instance)
-            {
-                other.IncrementReferenceCount();
-                DecrementReferenceCount();
-                m_Instance = other.m_Instance;
-            }
+            other.IncrementReferenceCount();
+            DecrementReferenceCount();
+            m_Instance = other.m_Instance;
             return *this;
         }
 
@@ -195,11 +202,8 @@ namespace Thryve::Core {
         const BaseType* Raw() const {return m_Instance;}
 
         void Reset(BaseType* instance = nullptr) {
-            if (m_Instance != instance)
-            {
-                DecrementReferenceCount();
-                m_Instance = instance;
-            }
+            DecrementReferenceCount();
+            m_Instance = instance;
         }
 
         template<typename DerivedType>

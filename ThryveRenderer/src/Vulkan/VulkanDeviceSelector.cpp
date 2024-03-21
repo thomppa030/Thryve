@@ -80,9 +80,7 @@ VkQueue VulkanDeviceSelector::GetGraphicsQueue() const {
     return m_graphicsQueue;
 }
 
-VkQueue VulkanDeviceSelector::GetPresentQueue() const {
-    return m_presentQueue;
-}
+VkQueue VulkanDeviceSelector::GetPresentQueue() const { return m_presentQueue; }
 
 void VulkanDeviceSelector::PickSuitableDevice(const std::vector<const char *> deviceExtensions
                                               , bool enableValidationLayers) {
