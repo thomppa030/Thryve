@@ -4,9 +4,11 @@
 #pragma once
 
 #include <atomic>
+#include <mutex>
 #include <unordered_set>
 #include <utility>
-#include <mutex>
+
+#include "glm/gtc/constants.hpp"
 
 namespace Thryve {
     static std::unordered_set<void*> s_LiveReferences;
@@ -39,16 +41,29 @@ namespace Thryve::Core {
         virtual ~ReferenceCounted() = default;
 
         void IncrementReferenceCount() const {
-            ++m_ReferenceCount;
+            m_ReferenceCount.fetch_add(1, std::memory_order_relaxed);
         }
         void DecrementReferenceCount() const {
-            --m_ReferenceCount;
+            m_ReferenceCount.fetch_sub(1, std::memory_order_acq_rel);
         }
 
-        uint32_t GetReferenceCount() const {return m_ReferenceCount.load();}
+        uint32_t GetReferenceCount() const {return m_ReferenceCount.load(std::memory_order_relaxed);}
+
+        void IncrementWeakCount() const
+        {
+            m_WeakReferenceCount.fetch_add(1, std::memory_order::relaxed);
+        }
+
+        void DecrementWeakCount() const
+        {
+            m_WeakReferenceCount.fetch_sub(1, std::memory_order::acq_rel);
+        }
+
+        uint32_t GetWeakCount() const {return m_WeakReferenceCount.load(std::memory_order::relaxed);}
 
     private:
         mutable std::atomic<uint32_t> m_ReferenceCount{0};
+        mutable std::atomic<uint32_t> m_WeakReferenceCount{0};
     };
 
     template<typename BaseType>
@@ -105,22 +120,6 @@ namespace Thryve::Core {
         SharedRef(const SharedRef<DerivedType>&& other) {
             m_Instance = (BaseType*)other.m_Instance;
             other.m_Instance = nullptr;
-        }
-
-        /**
-         * @brief Creates a new SharedRef object by copying the m_Instance from another SharedRef object without incrementing the reference count.
-         *
-         * This method creates a new SharedRef object by copying the m_Instance member from the provided 'other' SharedRef object, without incrementing the reference count.
-         *
-         * @param other The SharedRef object from which the m_Instance should be copied.
-         * @return A new SharedRef object with the copied m_Instance from the 'other' SharedRef object.
-         *
-         * @note The reference count of the m_Instance in the returned SharedRef object is not incremented.
-         */
-        static SharedRef<BaseType> CopyWithoutIncrement(const SharedRef<BaseType>& other) {
-            SharedRef<BaseType> _result = nullptr;
-            _result->m_Instance = other.m_Instance;
-            return _result;
         }
 
         ~SharedRef() {
@@ -252,12 +251,167 @@ namespace Thryve::Core {
                 }
             }
         }
+        void IncrementWeakCount() const
+        {
+            if (m_Instance)
+            {
+                m_Instance->IncrementWeakCount();
+            }
+        }
+
+        void DecrementWeakCount() const
+        {
+            if (m_Instance)
+            {
+                m_Instance->DecrementWeakCount();
+            }
+        }
 
         template<class DerivedType>
         friend class SharedRef;
 
         mutable BaseType* m_Instance;
     };
+    //TODO UniqueRef
+    template<typename BaseType>
+    class UniqueRef {
+    public:
+        explicit UniqueRef(BaseType* rawPointer = nullptr) : m_Instance{rawPointer} {}
+
+        ~UniqueRef()
+        {
+            Reset();
+        }
+
+        // Delete Copy operations to enforce unique ownership.
+        UniqueRef(const UniqueRef&) = delete;
+        UniqueRef& operator=(const UniqueRef&) = delete;
+
+        //Move constructor: Transfer the ownership from the source to this instance
+        UniqueRef(UniqueRef&& other) noexcept : m_Instance{std::exchange(other.m_Instance, nullptr)} {}
+
+        // Move assignment: Transfers ownership and handles self-assignment
+        UniqueRef& operator=(UniqueRef&& other) noexcept
+        {
+            if (this != &other)
+            {
+                Reset();
+                m_Instance = std::exchange(other.m_Instance, nullptr);
+            }
+            return *this;
+        }
+
+        // Resets the UniqueRef, deleting managed object and optionally takes ownership of a new Object
+        void Reset(BaseType* rawPointer = nullptr)
+        {
+            if (m_Instance)
+            {
+                delete m_Instance;
+                m_Instance = nullptr;
+            }
+            m_Instance = rawPointer;
+        };
+
+        BaseType* operator->() const{return m_Instance;}
+        BaseType &operator*() const { return *m_Instance; }
+
+        explicit operator bool() const {return m_Instance != nullptr;}
+
+        BaseType* Get() const
+        {
+            return m_Instance;
+        }
+
+        BaseType* Release()
+        {
+            BaseType* _temp = m_Instance;
+            m_Instance = nullptr;
+            return _temp;
+        }
+
+    private:
+        BaseType* m_Instance;
+
+    };
 
     //TODO WeakRef
+    template<typename BaseType>
+    class WeakRef {
+    public:
+        WeakRef() : m_Instance{nullptr}, m_WeakCountPtr{nullptr}
+        {}
+
+        template <typename DerivedType>
+        WeakRef(const SharedRef<DerivedType> &sharedRef) :
+            m_Instance{sharedRef.m_Instance}, m_WeakCountPtr{sharedRef.m_weakCount}
+        {
+            IncrementWeakcount();
+        }
+
+        ~WeakRef()
+        {
+            DecrementWeakcount();
+        }
+
+        WeakRef(const WeakRef &other) : m_Instance{other.m_Instance}, m_WeakCountPtr{other.m_WeakCountPtr}
+        {
+            IncrementWeakcount();
+        }
+
+        WeakRef& operator=(const WeakRef& other){
+            if (this != &other)
+            {
+                DecrementWeakcount();
+                m_Instance = other.m_Instance;
+                m_WeakCountPtr = other.m_WeakCountPtr;
+                IncrementWeakcount();
+            }
+            return *this;
+        }
+
+        WeakRef(WeakRef &&other) noexcept :
+            m_Instance{std::exchange(other.m_Instance, nullptr)},
+            m_WeakCountPtr{std::exchange(other.m_WeakCountPtr, nullptr)}
+        {}
+
+        WeakRef& operator=(WeakRef&& other) noexcept
+        {
+            if (this != &other)
+            {
+                DecrementWeakcount();
+                m_Instance = std::exchange(other.m_Instance, nullptr);
+                m_WeakCountPtr = std::exchange(other.m_WeakCountPtr, nullptr);
+            }
+            return *this;
+        }
+
+        SharedRef<BaseType> Lock() const
+        {
+            if (m_WeakCountPtr && *m_WeakCountPtr > 0)
+            {
+                return SharedRef<BaseType>(m_Instance);
+            }
+            return SharedRef<BaseType>(nullptr);
+        }
+
+    private:
+        BaseType* m_Instance;
+        std::atomic<uint32_t>* m_WeakCountPtr;
+
+        void IncrementWeakcount() const
+        {
+            if (m_WeakCountPtr)
+            {
+                ++(*m_WeakCountPtr);
+            }
+        }
+
+        void DecrementWeakcount()
+        {
+            if (m_WeakCountPtr && --(*m_WeakCountPtr) == 0 && !m_Instance)
+            {
+                delete m_WeakCountPtr;
+            }
+        }
+    };
 }
