@@ -60,6 +60,10 @@ namespace Thryve::Core {
         }
 
         uint32_t GetWeakCount() const {return m_WeakReferenceCount.load(std::memory_order::relaxed);}
+        std::atomic<uint32_t>* GetWeakCountAddress() const
+        {
+            return &m_WeakReferenceCount;
+        }
 
     private:
         mutable std::atomic<uint32_t> m_ReferenceCount{0};
@@ -231,6 +235,11 @@ namespace Thryve::Core {
             return !(*this == other);
         }
 
+        std::atomic<uint32_t>* GetWeakCountAddress() const
+        {
+            return m_Instance ? m_Instance->GetWeakCountAddress() : nullptr;
+        }
+
     private:
         void IncrementReferenceCount() const {
             if (m_Instance)
@@ -343,7 +352,7 @@ namespace Thryve::Core {
 
         template <typename DerivedType>
         WeakRef(const SharedRef<DerivedType> &sharedRef) :
-            m_Instance{sharedRef.m_Instance}, m_WeakCountPtr{sharedRef.m_weakCount}
+            m_Instance{sharedRef.m_Instance}, m_WeakCountPtr{sharedRef.GetWeakCountAddress()}
         {
             IncrementWeakcount();
         }
@@ -387,7 +396,7 @@ namespace Thryve::Core {
 
         SharedRef<BaseType> Lock() const
         {
-            if (m_WeakCountPtr && *m_WeakCountPtr > 0)
+            if (m_WeakCountPtr &&  m_Instance && m_Instance->GetReferenceCount() > 0)
             {
                 return SharedRef<BaseType>(m_Instance);
             }
