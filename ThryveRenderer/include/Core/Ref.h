@@ -281,7 +281,7 @@ namespace Thryve::Core {
 
         mutable BaseType* m_Instance;
     };
-    //TODO UniqueRef
+
     template<typename BaseType>
     class UniqueRef {
     public:
@@ -326,6 +326,11 @@ namespace Thryve::Core {
 
         explicit operator bool() const {return m_Instance != nullptr;}
 
+        template<typename... Args>
+        static UniqueRef<BaseType> Create(Args&&... args) {
+            return UniqueRef<BaseType>(new BaseType(std::forward<Args>(args)...));
+        }
+
         BaseType* Get() const
         {
             return m_Instance;
@@ -343,7 +348,6 @@ namespace Thryve::Core {
 
     };
 
-    //TODO WeakRef
     template<typename BaseType>
     class WeakRef {
     public:
