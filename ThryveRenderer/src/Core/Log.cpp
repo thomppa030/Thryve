@@ -12,8 +12,7 @@
 
 namespace Thryve::Core {
 
-    ILoggingService::ILoggingService()
-    = default;
+    ILoggingService::ILoggingService()  = default;
     ILoggingService::~ILoggingService() = default;
 
 
@@ -30,7 +29,7 @@ namespace Thryve::Core {
         if (m_config)
         {
             auto _consoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-            _consoleSink->set_pattern(m_config->LogPattern);
+            _consoleSink->set_pattern(m_config->LogPatternConsole);
 
             // Optionally, set color for each level
             _consoleSink->set_color(spdlog::level::debug, _consoleSink->white);
@@ -54,6 +53,7 @@ namespace Thryve::Core {
 
     void DevelopmentLogger::ShutDown()
     {
+        m_logger.reset();
     }
 
     void DevelopmentLogger::LogDebug(const std::string &message)
@@ -72,8 +72,62 @@ namespace Thryve::Core {
     {
         m_logger->error(message);
     }
-    void DevelopmentLogger::LogFatal(const std::string &message)
+    void DevelopmentLogger::LogFatal(const std::string &message) { m_logger->critical(message); }
+
+    ValidationLayerLogger::ValidationLayerLogger(const char *loggerName) : m_loggerName{loggerName} {}
+    ValidationLayerLogger::~ValidationLayerLogger() { ValidationLayerLogger::ShutDown(); }
+
+    void ValidationLayerLogger::Init(ServiceConfiguration *configuration)
+    {
+        m_config = dynamic_cast<ValidationLayerLoggerConfiguration*>(configuration);
+
+        if (m_config)
+        {
+            auto _consoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+            _consoleSink->set_pattern(m_config->LogPatternConsole);
+
+            // Optionally, set color for each level
+            _consoleSink->set_color(spdlog::level::debug, _consoleSink->white);
+            _consoleSink->set_color(spdlog::level::info, _consoleSink->cyan);
+            _consoleSink->set_color(spdlog::level::warn, _consoleSink->yellow);
+            _consoleSink->set_color(spdlog::level::err, _consoleSink->red);
+            _consoleSink->set_color(spdlog::level::critical, _consoleSink->magenta);
+
+            if (m_config->ConsoleOutputEnabled)
+                m_logger = std::make_shared<spdlog::logger>(m_loggerName, _consoleSink);
+            else
+                m_logger = spdlog::rotating_logger_mt("File_Logger", m_config->LogFilePath, m_config->MaxFileSize, m_config->MaxFiles);
+
+            m_logger->set_level(m_config->LogLevel);
+        }
+        else
+        {
+            std::cerr << "No valid Configuration for ValidationLayerLogger!\n";
+        }
+    }
+    void ValidationLayerLogger::ShutDown()
+    {
+        m_logger.reset();
+    }
+
+    void ValidationLayerLogger::LogDebug(const std::string &message)
+    {
+        m_logger->debug(message);
+    }
+    void ValidationLayerLogger::LogInfo(const std::string &message)
+    {
+        m_logger->info(message);
+    }
+    void ValidationLayerLogger::LogWarning(const std::string &message)
+    {
+        m_logger->warn(message);
+    }
+    void ValidationLayerLogger::LogError(const std::string &message)
+    {
+        m_logger->error(message);
+    }
+    void ValidationLayerLogger::LogFatal(const std::string &message)
     {
         m_logger->critical(message);
     }
-}
+} // namespace Thryve::Core

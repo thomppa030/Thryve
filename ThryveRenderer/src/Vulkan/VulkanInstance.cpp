@@ -8,6 +8,8 @@
 #include <stdexcept>
 #include <vulkan/vulkan.hpp>
 
+#include "Core/Log.h"
+#include "Core/ServiceRegistry.h"
 #include "GLFW/glfw3.h"
 #include "utils/VkDebugUtils.h"
 
@@ -180,12 +182,69 @@ namespace Thryve::Rendering {
         VK_CALL(CreateDebugUtilsMessengerEXT(m_instance, &createInfo, nullptr, &debugMessenger));
     }
 
+    enum class LogMessageSeverity {
+        DEBUG,
+        INFO,
+        WARN,
+        ERROR,
+        UNKNOWN
+    };
+
+    LogMessageSeverity GetMessageSeverityLevel(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity)
+    {
+        if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
+        {
+            return LogMessageSeverity::DEBUG;
+        }
+        else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
+        {
+            return LogMessageSeverity::INFO;
+        }
+        else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+        {
+            return LogMessageSeverity::WARN;
+        }
+        else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+        {
+            return LogMessageSeverity::ERROR;
+        }
+        return LogMessageSeverity::UNKNOWN;
+    }
+
     VkBool32 VulkanInstance::DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                                            VkDebugUtilsMessageTypeFlagsEXT messageType,
                                            const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData)
     {
+        const auto _eMessageSeverity = GetMessageSeverityLevel(messageSeverity);
 
-        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+        if (auto _validationLogger = Core::ServiceRegistry::GetService<Core::ValidationLayerLogger>())
+        {
+            switch (_eMessageSeverity)
+            {
+            case LogMessageSeverity::DEBUG:
+                _validationLogger->LogDebug(pCallbackData->pMessage);
+                break;
+            case LogMessageSeverity::INFO:
+                _validationLogger->LogInfo(pCallbackData->pMessage);
+                break;
+            case LogMessageSeverity::WARN:
+                _validationLogger->LogWarning(pCallbackData->pMessage);
+                break;
+            case LogMessageSeverity::ERROR:
+                _validationLogger->LogError(pCallbackData->pMessage);
+                break;
+            case LogMessageSeverity::UNKNOWN:
+                _validationLogger->LogFatal(pCallbackData->pMessage);
+                break;
+            default:;
+                _validationLogger->LogDebug(pCallbackData->pMessage);
+            }
+        }
+        else
+        {
+            std::cerr
+                << "Failed to find Logger for Validation Layer, ensure all Logging Services are set up correctly!";
+        }
 
         return VK_FALSE;
     }
