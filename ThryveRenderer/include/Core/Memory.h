@@ -4,6 +4,7 @@
 
 #pragma once
 #include <map>
+#include <string_view>
 
 
 #include "IService.h"
@@ -110,8 +111,6 @@ namespace Thryve::Core::Memory {
         FreeBlock* m_FreeList;
     };
 
-
-
     struct MemoryServiceConfiguration final : ServiceConfiguration {
         size_t MaximumDynamicSize = 32*1024*1024;
     };
@@ -120,16 +119,16 @@ namespace Thryve::Core::Memory {
     public:
         ~MemoryService() override;
 
-        void Init(const ServiceConfiguration* configuration) override;
+        void Init(ServiceConfiguration* configuration) override;
         void ShutDown() override;
 
         IAllocator* GetAllocator(AllocatorType type);
 
-        template<typename AllocatorT, typename ...Args>
-        void RegisterAllocator(const AllocatorType type, Args&... args)
-        {
-            allocators[type] = UniqueRef<AllocatorT>::Create(args);
-        }
+        // template<typename AllocatorT, typename ...Args>
+        // void RegisterAllocator(const AllocatorType type, Args&... args)
+        // {
+        //     allocators[type] = UniqueRef<AllocatorT>::Create(args);
+        // }
 
     private:
         std::map <AllocatorType, UniqueRef<IAllocator>> allocators;

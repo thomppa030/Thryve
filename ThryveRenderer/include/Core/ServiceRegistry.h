@@ -1,17 +1,15 @@
 //
 // Created by kprie on 24.03.2024.
 //
+#pragma once
 
-#ifndef SERVICEREGISTRY_H
-#define SERVICEREGISTRY_H
 #include <map>
 #include <typeindex>
+#include "Core/IService.h"
 
 #include "Ref.h"
 
 namespace Thryve::Core {
-
-    class IService;
 
     class ServiceRegistry {
     public:
@@ -35,5 +33,3 @@ namespace Thryve::Core {
         static std::map<std::type_index, SharedRef<IService>> registeredServices;
     };
 }
-
-#endif //SERVICEREGISTRY_H
