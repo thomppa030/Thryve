@@ -6,8 +6,8 @@
 #include <map>
 
 
+#include "IService.h"
 #include "Ref.h"
-#include "Service.h"
 
 namespace Thryve::Core::Memory {
 
@@ -116,7 +116,7 @@ namespace Thryve::Core::Memory {
         size_t MaximumDynamicSize = 32*1024*1024;
     };
 
-    class MemoryService final : public Service {
+    class MemoryService final : public IService {
     public:
         ~MemoryService() override;
 

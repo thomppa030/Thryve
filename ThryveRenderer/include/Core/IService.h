@@ -11,8 +11,8 @@ struct ServiceConfiguration : Configuration {
 };
 
 namespace Thryve::Core{
-    struct Service {
-        virtual ~Service() = default;
+    struct IService {
+        virtual ~IService() = default;
 
         virtual void Init(const ServiceConfiguration* configuration){}
         virtual void ShutDown(){}
