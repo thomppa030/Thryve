@@ -1,0 +1,79 @@
+//
+// Created by thomppa on 3/24/24.
+//
+
+#include "Core/Log.h"
+
+#include <iostream>
+
+#include "spdlog/sinks/rotating_file_sink.h"
+#include "spdlog/sinks/stdout_color_sinks-inl.h"
+#include "spdlog/spdlog.h"
+
+namespace Thryve::Core {
+
+    ILoggingService::ILoggingService()
+    = default;
+    ILoggingService::~ILoggingService() = default;
+
+
+    DevelopmentLogger::DevelopmentLogger(const char* loggerName) : m_loggerName{loggerName} {}
+    DevelopmentLogger::~DevelopmentLogger()
+    {
+        DevelopmentLogger::ShutDown();
+    }
+
+    void DevelopmentLogger::Init(ServiceConfiguration *configuration)
+    {
+        m_config = dynamic_cast<DevelopmentLoggerConfiguration*>(configuration);
+
+        if (m_config)
+        {
+            auto _consoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+            _consoleSink->set_pattern(m_config->LogPattern);
+
+            // Optionally, set color for each level
+            _consoleSink->set_color(spdlog::level::debug, _consoleSink->white);
+            _consoleSink->set_color(spdlog::level::info, _consoleSink->cyan);
+            _consoleSink->set_color(spdlog::level::warn, _consoleSink->yellow);
+            _consoleSink->set_color(spdlog::level::err, _consoleSink->red);
+            _consoleSink->set_color(spdlog::level::critical, _consoleSink->magenta);
+
+            if (m_config->ConsoleOutputEnabled)
+                m_logger = std::make_shared<spdlog::logger>(m_loggerName, _consoleSink);
+            else
+                m_logger = spdlog::rotating_logger_mt("File_Logger", m_config->LogFilePath, m_config->MaxFileSize, m_config->MaxFiles);
+
+            m_logger->set_level(m_config->LogLevel);
+        }
+        else
+        {
+            std::cerr << "No valid Configuration for DevelopmentLogger!\n";
+        }
+    }
+
+    void DevelopmentLogger::ShutDown()
+    {
+    }
+
+    void DevelopmentLogger::LogDebug(const std::string &message)
+    {
+        m_logger->debug(message);
+    }
+    void DevelopmentLogger::LogInfo(const std::string &message)
+    {
+        m_logger->info(message);
+    }
+    void DevelopmentLogger::LogWarning(const std::string &message)
+    {
+        m_logger->warn(message);
+    }
+    void DevelopmentLogger::LogError(const std::string &message)
+    {
+        m_logger->error(message);
+    }
+    void DevelopmentLogger::LogFatal(const std::string &message)
+    {
+        m_logger->critical(message);
+    }
+}

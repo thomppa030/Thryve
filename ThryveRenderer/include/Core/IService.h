@@ -5,16 +5,19 @@
 #ifndef SERVICE_H
 #define SERVICE_H
 #include "Configuration.h"
+#include "Ref.h"
 
 struct ServiceConfiguration : Configuration {
     //TODO Should be properly done
 };
 
 namespace Thryve::Core{
-    struct IService {
-        virtual ~IService() = default;
+    class IService : public ReferenceCounted {
+    public:
+        IService() = default;
+        ~IService() override = default;
 
-        virtual void Init(const ServiceConfiguration* configuration){}
+        virtual void Init(ServiceConfiguration* configuration){}
         virtual void ShutDown(){}
     };
 }
