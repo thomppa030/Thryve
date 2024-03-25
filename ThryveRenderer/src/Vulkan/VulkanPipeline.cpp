@@ -6,12 +6,12 @@
 
 #include <fstream>
 
-VulkanPipeline::VulkanPipeline(const VkDevice device
-                               , const VkRenderPass renderPass): m_device(
-                                                                     device), m_pipelineLayout(
-                                                                     nullptr), m_renderPass(
-                                                                     renderPass), m_graphicsPipeline(
-                                                                     nullptr) {
+#include "Vulkan/VulkanContext.h"
+
+VulkanPipeline::VulkanPipeline(const VkRenderPass renderPass) :
+    m_pipelineLayout(nullptr), m_renderPass(renderPass), m_graphicsPipeline(nullptr)
+{
+        m_device = Thryve::Rendering::VulkanContext::GetCurrentDevice()->GetLogicalDevice();
 }
 
 VulkanPipeline::~VulkanPipeline() {

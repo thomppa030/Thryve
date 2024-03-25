@@ -30,6 +30,7 @@ namespace Thryve::Rendering {
 
         [[nodiscard]] Core::SharedRef<VulkanDeviceSelector> GetDevice() const {return m_device;}
 
+        static GLFWwindow* GetWindow() {return s_Window;}
         static VkInstance GetInstance() {return s_Instance;}
         static VkSurfaceKHR GetSurface() {return s_Surface;}
 
@@ -51,6 +52,7 @@ namespace Thryve::Rendering {
 
         inline static VkInstance s_Instance;
         inline static VkSurfaceKHR s_Surface;
+        inline static GLFWwindow* s_Window;
     };
 
 }

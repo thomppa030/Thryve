@@ -4,9 +4,12 @@
 
 #include "Vulkan/VulkanCommandBuffer.h"
 #include <mutex>
+
+#include "Vulkan/VulkanContext.h"
 #include "utils/VkDebugUtils.h"
 
-VulkanCommandBuffer::VulkanCommandBuffer(const VkDevice device, const VkCommandPool commandPool): m_device(device), m_commandPool(commandPool) {
+VulkanCommandBuffer::VulkanCommandBuffer(const VkCommandPool commandPool): m_commandPool(commandPool) {
+    m_device = Thryve::Rendering::VulkanContext::Get()->GetDevice()->GetLogicalDevice();
 }
 
 VkCommandBuffer VulkanCommandBuffer::Allocate(bool bBegingRecording) {

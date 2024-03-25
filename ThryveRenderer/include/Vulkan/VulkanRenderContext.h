@@ -73,15 +73,8 @@ namespace Thryve::Rendering
         void Run();
 
     private:
-        // Window management
-        GLFWwindow* m_window;
-        std::unique_ptr<VulkanWindowContext> m_windowContext;
-
         // Vulkan core components
-        VkInstance m_instance;
-        VkSurfaceKHR m_surface;
         VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
-        Core::SharedRef<VulkanDeviceSelector> m_deviceSelector;
         VkDevice m_device;
 
         // Swap chain and rendering setup
@@ -120,14 +113,9 @@ namespace Thryve::Rendering
         VkImageView m_textureImageView;
         VkSampler m_textureSampler;
 
-        // Initialization and setup methods
-        void InitWindow();
-
 
         void InitVulkan();
-        void CreateSurface();
         void PickSuitableDevices();
-        void InitInstance();
         void CreateSwapChain();
         void InitRenderPassFactory();
         void CreateGraphicsPipeline();
@@ -145,19 +133,14 @@ namespace Thryve::Rendering
         void CreateDescriptorSets();
         void CreateCommandBuffer();
 
-
         void RecordCommandBufferSegment(VkCommandBuffer commandBuffer, uint32_t imageIndex) const;
-
         // Main loop and frame drawing
         void MainLoop();
         void DrawFrame();
         void UpdateUniformBuffer(uint32_t currentImage) const;
-
         // Synchronization methods
         void CreateSyncObjects();
-
         // Cleanup
         void Cleanup();
     };
-
 }

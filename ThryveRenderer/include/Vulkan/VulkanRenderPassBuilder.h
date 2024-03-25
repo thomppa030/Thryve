@@ -11,7 +11,7 @@
 
 class VulkanRenderPassBuilder {
 public:
-    explicit VulkanRenderPassBuilder(VkDevice device);
+    explicit VulkanRenderPassBuilder();
     ~VulkanRenderPassBuilder();
 
     // Disallow copying and moving for simplicity

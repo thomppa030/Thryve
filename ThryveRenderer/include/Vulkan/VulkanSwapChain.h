@@ -9,7 +9,7 @@
 
 class VulkanSwapChain {
 public:
-    VulkanSwapChain(VulkanDeviceSelector* DeviceSelector, VkSurfaceKHR surface, GLFWwindow* window);
+    VulkanSwapChain();
     ~VulkanSwapChain();
 
     bool HandlePresentResult(VkResult result);
@@ -42,7 +42,7 @@ public:
     VkResult PresentImage(uint32_t imageIndex, VkSemaphore renderFinishedSemaphore) const;
 
 private:
-    VulkanDeviceSelector* m_deviceSelector;
+    Thryve::Core::SharedRef<VulkanDeviceSelector> m_deviceSelector;
     VkPhysicalDevice m_physicalDevice;
     VkDevice m_device;
     VkSurfaceKHR m_surface;

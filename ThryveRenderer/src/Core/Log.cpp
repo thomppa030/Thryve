@@ -7,7 +7,7 @@
 #include <iostream>
 
 #include "spdlog/sinks/rotating_file_sink.h"
-#include "spdlog/sinks/stdout_color_sinks-inl.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 
 namespace Thryve::Core {
@@ -28,15 +28,10 @@ namespace Thryve::Core {
 
         if (m_config)
         {
-            auto _consoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-            _consoleSink->set_pattern(m_config->LogPatternConsole);
 
-            // Optionally, set color for each level
-            _consoleSink->set_color(spdlog::level::debug, _consoleSink->white);
-            _consoleSink->set_color(spdlog::level::info, _consoleSink->cyan);
-            _consoleSink->set_color(spdlog::level::warn, _consoleSink->yellow);
-            _consoleSink->set_color(spdlog::level::err, _consoleSink->red);
-            _consoleSink->set_color(spdlog::level::critical, _consoleSink->magenta);
+            auto _consoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+
+            _consoleSink->set_pattern(m_config->LogPatternConsole);
 
             if (m_config->ConsoleOutputEnabled)
                 m_logger = std::make_shared<spdlog::logger>(m_loggerName, _consoleSink);
@@ -85,13 +80,6 @@ namespace Thryve::Core {
         {
             auto _consoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
             _consoleSink->set_pattern(m_config->LogPatternConsole);
-
-            // Optionally, set color for each level
-            _consoleSink->set_color(spdlog::level::debug, _consoleSink->white);
-            _consoleSink->set_color(spdlog::level::info, _consoleSink->cyan);
-            _consoleSink->set_color(spdlog::level::warn, _consoleSink->yellow);
-            _consoleSink->set_color(spdlog::level::err, _consoleSink->red);
-            _consoleSink->set_color(spdlog::level::critical, _consoleSink->magenta);
 
             if (m_config->ConsoleOutputEnabled)
                 m_logger = std::make_shared<spdlog::logger>(m_loggerName, _consoleSink);

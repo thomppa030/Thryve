@@ -4,7 +4,10 @@
 
 #include "Vulkan/VulkanRenderPassBuilder.h"
 
-VulkanRenderPassBuilder::VulkanRenderPassBuilder(const VkDevice device) : m_device(device){
+#include "Vulkan/VulkanContext.h"
+
+VulkanRenderPassBuilder::VulkanRenderPassBuilder(){
+    m_device = Thryve::Rendering::VulkanContext::Get()->GetDevice()->GetLogicalDevice();
 }
 
 VulkanRenderPassBuilder::~VulkanRenderPassBuilder() {

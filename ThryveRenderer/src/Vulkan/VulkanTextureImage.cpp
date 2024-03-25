@@ -5,6 +5,7 @@
 #include "Vulkan/VulkanTextureImage.h"
 
 #include <complex>
+#include "Vulkan/VulkanContext.h"
 #include "stb_image.h"
 
 #include "utils/ImageUtils.h"
@@ -12,11 +13,13 @@
 #include "utils/VulkanBufferUtils.h"
 
 
-VulkanTextureImage::VulkanTextureImage(VkDevice device, VkPhysicalDevice physicalDevice, VkCommandPool commandPool
-                                       , VkQueue graphicsQueue, VkCommandBuffer commandBuffer): m_device(device), m_PhysicalDevice(physicalDevice),
-                                                             m_commandPool(commandPool),
-                                                             m_transferQueue(graphicsQueue),
-                                                             m_commandBuffer(commandBuffer) {
+VulkanTextureImage::VulkanTextureImage(VkCommandPool commandPool, VkCommandBuffer commandBuffer) :
+    m_commandPool(commandPool), m_commandBuffer(commandBuffer)
+{
+    auto _deviceSelector = Thryve::Rendering::VulkanContext::Get()->GetDevice();
+    m_device = _deviceSelector->GetLogicalDevice();
+    m_PhysicalDevice = _deviceSelector->GetPhysicalDevice();
+    m_transferQueue = _deviceSelector->GetGraphicsQueue();
 }
 
 VulkanTextureImage::~VulkanTextureImage() {

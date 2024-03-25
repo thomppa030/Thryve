@@ -103,7 +103,7 @@ struct PipelineConfigInfo {
 class VulkanPipeline {
 
 public:
-    VulkanPipeline(VkDevice device, VkRenderPass renderPass);
+    VulkanPipeline(VkRenderPass renderPass);
     ~VulkanPipeline();
 
     // Delete copy and move semantics for simplicity and Vulkan handle safety

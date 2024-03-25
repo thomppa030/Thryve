@@ -31,7 +31,9 @@ target_include_directories(ThryveRenderer
 
 # Source and header files for the ThryveRenderer target
 file(GLOB_RECURSE SOURCES "src/*cpp")
-file(GLOB_RECURSE HEADERS "include/*h")
+file(GLOB_RECURSE HEADERS
+        "include/*h"
+        "include/*hpp")
 target_sources(ThryveRenderer PRIVATE ${SOURCES} ${HEADERS})
 
 # Link libraries to the ThryveRenderer target

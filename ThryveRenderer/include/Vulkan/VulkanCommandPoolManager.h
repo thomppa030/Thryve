@@ -6,7 +6,7 @@
 
 class VulkanCommandPoolManager {
 public:
-    VulkanCommandPoolManager(VkDevice device, uint32_t queueFamilyIndex);
+    VulkanCommandPoolManager();
 
     ~VulkanCommandPoolManager();
 

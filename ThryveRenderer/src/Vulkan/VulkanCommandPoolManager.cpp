@@ -5,10 +5,13 @@
 
 #include <iostream>
 
+#include "Vulkan/VulkanContext.h"
 #include "utils/VkDebugUtils.h"
 
-VulkanCommandPoolManager::VulkanCommandPoolManager(VkDevice device, const uint32_t queueFamilyIndex) : m_device(device) {
-    CreateCommandPool(queueFamilyIndex);
+VulkanCommandPoolManager::VulkanCommandPoolManager() {
+    auto _deviceSelector = Thryve::Rendering::VulkanContext::Get()->GetDevice();
+    m_device = _deviceSelector->GetLogicalDevice();
+    CreateCommandPool(_deviceSelector->FindQueueFamilies(_deviceSelector->GetPhysicalDevice()).GraphicsFamily.value());
 }
 
 VulkanCommandPoolManager::~VulkanCommandPoolManager() {

@@ -6,7 +6,7 @@
 
 class VulkanTextureImage {
 public:
-    VulkanTextureImage(VkDevice device, VkPhysicalDevice physicalDevice, VkCommandPool commandPool, VkQueue graphicsQueue, VkCommandBuffer commandBuffer);
+    VulkanTextureImage(VkCommandPool commandPool, VkCommandBuffer commandBuffer);
     ~VulkanTextureImage();
 
     //Accessors

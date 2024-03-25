@@ -20,38 +20,21 @@
 #include "utils/VulkanBufferUtils.h"
 
 namespace Thryve::Rendering {
-    VulkanRenderContext::VulkanRenderContext(): m_window(nullptr), m_surface(nullptr), m_device(nullptr),
-                                                m_renderPass(nullptr),
+    VulkanRenderContext::VulkanRenderContext(): m_renderPass(nullptr),
                                                 m_commandPool(nullptr){
     }
 
     VulkanRenderContext::~VulkanRenderContext() {
     }
 
-    void VulkanRenderContext::InitWindow() {
-        m_windowContext = std::make_unique<VulkanWindowContext>("ThryveRenderer", WIDTH, HEIGHT);
-        m_window = m_windowContext->GetWindow();
-    }
-
-    void VulkanRenderContext::InitInstance() {
-        m_instance = VulkanContext::Get()->GetInstance();
-    }
-
-    void VulkanRenderContext::PickSuitableDevices() {
-        m_deviceSelector = VulkanContext::GetCurrentDevice();
-        m_deviceSelector->PickSuitableDevice(DEVICE_EXTENSIONS, ENABLE_VALIDATION_LAYERS);
-        m_physicalDevice = m_deviceSelector->GetPhysicalDevice();
-        m_device = m_deviceSelector->GetLogicalDevice();
-    }
-
     void VulkanRenderContext::CreateSwapChain() {
         int width, height = 0;
-        glfwGetFramebufferSize(m_window, &width, &height);
+        glfwGetFramebufferSize(VulkanContext::GetWindow(), &width, &height);
         m_swapChain->InitializeSwapChain(width, height);
     }
 
     void VulkanRenderContext::InitRenderPassFactory() {
-        m_renderPassFactory = std::make_unique<VulkanRenderPassBuilder>(m_device);
+        m_renderPassFactory = std::make_unique<VulkanRenderPassBuilder>();
         m_renderPassFactory->CreateStandardRenderPasses(m_swapChain->GetSwapchainImageFormat());
     }
 
@@ -60,12 +43,12 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::CreateCommandPool() {
-        m_cmdPoolManager = std::make_unique<VulkanCommandPoolManager>(m_device, m_deviceSelector->FindQueueFamilies(m_physicalDevice).GraphicsFamily.value());
+        m_cmdPoolManager = std::make_unique<VulkanCommandPoolManager>();
         m_commandPool = m_cmdPoolManager->GetCommandPool();
     }
 
     void VulkanRenderContext::InitCmdBufferManager() {
-        m_cmdBuffer = std::make_unique<VulkanCommandBuffer>(m_device, m_commandPool);
+        m_cmdBuffer = std::make_unique<VulkanCommandBuffer>(m_commandPool);
     }
 
     VkDescriptorPool VulkanRenderContext::CreateDescriptorPool() const {
@@ -86,7 +69,7 @@ namespace Thryve::Rendering {
         poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * 2); // Assuming one set for UB and one for samplers per frame
 
         VkDescriptorPool descriptorPool;
-        VK_CALL(vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &descriptorPool));
+        VK_CALL(vkCreateDescriptorPool(VulkanContext::GetCurrentDevice()->GetLogicalDevice(), &poolInfo, nullptr, &descriptorPool));
 
         return descriptorPool;
     }
@@ -126,7 +109,7 @@ namespace Thryve::Rendering {
             descriptorWrites[1].pImageInfo = &imageInfo; // Optional
             descriptorWrites[1].pTexelBufferView = nullptr; // Optional
 
-            vkUpdateDescriptorSets(m_device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+            vkUpdateDescriptorSets(VulkanContext::GetCurrentDevice()->GetLogicalDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
     }
 
@@ -139,7 +122,7 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::CreateTextureImage() {
-        m_VulkanTextureImage = std::make_unique<VulkanTextureImage>(m_device, m_physicalDevice, m_cmdPoolManager->GetCommandPool(), m_deviceSelector->GetGraphicsQueue(), m_commandBuffer);
+        m_VulkanTextureImage = std::make_unique<VulkanTextureImage>(m_cmdPoolManager->GetCommandPool(), m_commandBuffer);
         m_VulkanTextureImage->createTextureImage(std::string(RESOURCE_DIR)+"/statue.jpg");
         m_textureImage = m_VulkanTextureImage->GetTextureImage();
     }
@@ -154,18 +137,17 @@ namespace Thryve::Rendering {
         m_textureSampler = m_VulkanTextureImage->GetTextureSampler();
     }
 
-    void VulkanRenderContext::InitVulkan() {
-        InitInstance();
-        CreateSurface();
+    void VulkanRenderContext::InitVulkan()
+    {
         PickSuitableDevices();
-        m_swapChain = std::make_unique<VulkanSwapChain>(m_deviceSelector.Raw(),m_surface,m_window);
+        m_swapChain = std::make_unique<VulkanSwapChain>();
         CreateSwapChain();
         InitRenderPassFactory();
         m_renderPass = m_renderPassFactory->GetRenderPass("default")->GetRenderPass();
         m_swapChain->SetRenderPass(m_renderPass);
 
         m_descriptorPool = CreateDescriptorPool();
-        m_descriptorManager = std::make_unique<VulkanDescriptorManager>(m_device, m_descriptorPool);
+        m_descriptorManager = std::make_unique<VulkanDescriptorManager>(m_descriptorPool);
         CreateDescriptorSetLayout();
         CreateGraphicsPipeline();
         CreateFramebuffers();
@@ -181,9 +163,15 @@ namespace Thryve::Rendering {
         CreateCommandBuffer();
         CreateSyncObjects();
     }
+    void VulkanRenderContext::PickSuitableDevices()
+    {
+        auto _deviceSelector = VulkanContext::GetCurrentDevice();
+        m_device = _deviceSelector->GetLogicalDevice();
+        m_physicalDevice = _deviceSelector->GetPhysicalDevice();
+    }
 
     void VulkanRenderContext::MainLoop() {
-        while (!glfwWindowShouldClose(m_window)) {
+        while (!glfwWindowShouldClose(VulkanContext::GetWindow())) {
             glfwPollEvents();
             DrawFrame();
         }
@@ -204,8 +192,8 @@ namespace Thryve::Rendering {
         m_swapChain.reset();
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            vkDestroyBuffer(m_device, m_uniformBuffers[i], nullptr);
-            vkFreeMemory(m_device, m_uniformBuffersMemory[i], nullptr);
+             vkDestroyBuffer(m_device, m_uniformBuffers[i], nullptr);
+             vkFreeMemory(m_device, m_uniformBuffersMemory[i], nullptr);
         }
 
         vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
@@ -213,15 +201,6 @@ namespace Thryve::Rendering {
         m_VulkanTextureImage.reset();
 
         vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
-
-        // m_deviceSelector.Reset();
-        // vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
-        // vkDestroyInstance(m_instance, nullptr);
-        m_windowContext.reset();
-    }
-
-    void VulkanRenderContext::CreateSurface() {
-        m_surface = m_windowContext->CreateSurface();
     }
 
     void VulkanRenderContext::CreateGraphicsPipeline() {
@@ -235,7 +214,7 @@ namespace Thryve::Rendering {
         configInfo.cullMode = VK_CULL_MODE_BACK_BIT;
         configInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 
-        m_pipeline = std::make_unique<VulkanPipeline>(m_device, m_renderPass);
+        m_pipeline = std::make_unique<VulkanPipeline>(m_renderPass);
 
         const auto vertexShaderPath = std::string(SHADERS_DIR)+"/SPIRV/triangle.vert.spv";
         const auto fragmentShaderPath = std::string(SHADERS_DIR)+"/SPIRV/triangle.frag.spv";
@@ -244,7 +223,8 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::CreateVertexBuffer() {
-        m_vulkanVertexBuffer = std::make_unique<VulkanVertexBuffer<Vertex3D>>(m_device, m_physicalDevice,m_commandPool, m_deviceSelector->GetGraphicsQueue());
+        auto _deviceSelector = VulkanContext::GetCurrentDevice();
+        m_vulkanVertexBuffer = std::make_unique<VulkanVertexBuffer<Vertex3D>>(m_device, m_physicalDevice, m_commandPool, _deviceSelector->GetGraphicsQueue());
         m_vulkanVertexBuffer->Create(VERTICES_3D);
     }
 
@@ -260,9 +240,10 @@ namespace Thryve::Rendering {
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             constexpr VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-            VulkanBufferUtils::CreateBuffer({ m_device, m_physicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT}, m_uniformBuffers[i], m_uniformBuffersMemory[i]);
+            auto _deviceSelector = VulkanContext::GetCurrentDevice();
+            VulkanBufferUtils::CreateBuffer({ _deviceSelector->GetLogicalDevice(), _deviceSelector->GetPhysicalDevice(), bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT}, m_uniformBuffers[i], m_uniformBuffersMemory[i]);
 
-            VK_CALL(vkMapMemory(m_device, m_uniformBuffersMemory[i], 0, bufferSize, 0, &m_uniformBuffersMapped[i]));
+            VK_CALL(vkMapMemory(_deviceSelector->GetLogicalDevice(), m_uniformBuffersMemory[i], 0, bufferSize, 0, &m_uniformBuffersMapped[i]));
         }
     }
 
@@ -350,7 +331,7 @@ namespace Thryve::Rendering {
         auto& _syncObjects = m_FrameSynchronizer->GetSyncObjects(currentFrame);
 
         if (!m_FrameSynchronizer->WaitForFences(currentFrame)) {
-            VK_CALL(vkWaitForFences(m_device, 1, &_syncObjects.in_flight_fence, VK_TRUE, UINT64_MAX));
+            VK_CALL(vkWaitForFences(VulkanContext::GetCurrentDevice()->GetLogicalDevice(), 1, &_syncObjects.in_flight_fence, VK_TRUE, UINT64_MAX));
         }
 
         if (auto [result, optionalImageIndex] = m_swapChain->AcquireNextImage(_syncObjects.image_available_semaphore);
@@ -364,7 +345,7 @@ namespace Thryve::Rendering {
 
                 UpdateUniformBuffer(currentFrame);
 
-                VK_CALL(vkResetFences(m_device, 1, &_syncObjects.in_flight_fence));
+                VK_CALL(vkResetFences(VulkanContext::GetCurrentDevice()->GetLogicalDevice(), 1, &_syncObjects.in_flight_fence));
 
                 VK_CALL(vkResetCommandBuffer(m_commandBuffer, /*VkCommandBufferResetFlagBits*/ 0));
                 RecordCommandBufferSegment(m_commandBuffer, _imageIndex);
@@ -384,7 +365,6 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::Run() {
-        InitWindow();
         InitVulkan();
         MainLoop();
         Cleanup();

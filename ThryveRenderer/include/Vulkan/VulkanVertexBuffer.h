@@ -14,7 +14,7 @@ namespace Thryve::Rendering {
     template <typename VertexType>
     class VulkanVertexBuffer {
     public:
-        VulkanVertexBuffer(const VkDevice _device, VkPhysicalDevice physicalDevice, const VkCommandPool commandPool, const VkQueue graphicsQueue) :
+        VulkanVertexBuffer( VkDevice _device, VkPhysicalDevice physicalDevice, const VkCommandPool commandPool, const VkQueue graphicsQueue) :
             m_commandPool(commandPool), m_graphicsQueue(graphicsQueue), m_device{_device},
             m_physicalDevice{physicalDevice}
         {

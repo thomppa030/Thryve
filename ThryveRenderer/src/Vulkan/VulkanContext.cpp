@@ -21,6 +21,7 @@ namespace Thryve::Rendering {
     void VulkanContext::Init()
     {
         m_windowContext = Core::SharedRef<VulkanWindowContext>::Create("Thryve Window", 1920, 1080);
+        s_Window = m_windowContext->GetWindow();
         //
         m_vulkanInstance = Core::SharedRef<VulkanInstance>::Create();
         m_vulkanInstance->Init("ThryveStaticRender");
@@ -30,9 +31,8 @@ namespace Thryve::Rendering {
 
         m_device = Core::SharedRef<VulkanDeviceSelector>::Create(s_Instance, s_Surface);
         m_device->PickSuitableDevice(DEVICE_EXTENSIONS, ENABLE_VALIDATION_LAYERS);
-
-        
     }
+
     void VulkanContext::Run()
     {
         m_renderContext->Run();
