@@ -77,6 +77,13 @@ namespace Thryve::Rendering
         VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
         VkDevice m_device;
 
+        VkImage depthImage;
+        VkDeviceMemory dethImageMemory;
+        VkImageView depthimageView;
+
+        // Depth Functions
+        void createDepthResources();
+
         // Swap chain and rendering setup
         std::unique_ptr<VulkanSwapChain> m_swapChain;
         VkRenderPass m_renderPass;

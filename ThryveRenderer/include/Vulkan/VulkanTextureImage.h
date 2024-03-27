@@ -10,8 +10,8 @@ public:
     ~VulkanTextureImage();
 
     //Accessors
-    void createTextureImage(const std::string& fileName);
-    void createTextureImageView();
+    void createTextureImage(const std::string &fileName);
+    void createTextureImageView() const;
     void createTextureSampler();
     [[nodiscard]] VkImage GetTextureImage() const {return m_textureImage;}
     [[nodiscard]] VkImageView GetTextureImageView() const {return m_textureImageView;}
@@ -32,5 +32,4 @@ private:
     VkSampler sampler{};
 
     void cleanup();
-    void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory) const;
 };

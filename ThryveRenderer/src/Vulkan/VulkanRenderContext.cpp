@@ -9,6 +9,8 @@
 #include <iostream>
 
 #include "Config.h"
+#include "Core/Log.h"
+#include "Core/ServiceRegistry.h"
 #include "Vulkan/VulkanContext.h"
 #include "Vulkan/VulkanDescriptorManager.h"
 #include "Vulkan/VulkanDescriptorSetBuilder.h"
@@ -16,6 +18,7 @@
 #include "Vulkan/VulkanUniformBuffer.h"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "stb_image.h"
+#include "utils/ImageUtils.h"
 #include "utils/VkDebugUtils.h"
 #include "utils/VulkanBufferUtils.h"
 
@@ -329,9 +332,9 @@ namespace Thryve::Rendering {
 
     void VulkanRenderContext::DrawFrame() {
         auto& _syncObjects = m_FrameSynchronizer->GetSyncObjects(currentFrame);
-
+        auto frameStart = std::chrono::high_resolution_clock::now();
         if (!m_FrameSynchronizer->WaitForFences(currentFrame)) {
-            VK_CALL(vkWaitForFences(VulkanContext::GetCurrentDevice()->GetLogicalDevice(), 1, &_syncObjects.in_flight_fence, VK_TRUE, UINT64_MAX));
+            VK_CALL(vkWaitForFences(m_device, 1, &_syncObjects.in_flight_fence, VK_TRUE, UINT64_MAX));
         }
 
         if (auto [result, optionalImageIndex] = m_swapChain->AcquireNextImage(_syncObjects.image_available_semaphore);
@@ -362,11 +365,28 @@ namespace Thryve::Rendering {
                 currentFrame = m_FrameSynchronizer->AdvanceFrame(currentFrame);
             }
         }
+        auto FrameEnd = std::chrono::high_resolution_clock::now();
+        auto FramTimeInMs = std::chrono::duration_cast<std::chrono::microseconds>(FrameEnd - frameStart).count() / 1000.0f;
+
+        std::cout << FramTimeInMs << "\n";
     }
 
-    void VulkanRenderContext::Run() {
+    void VulkanRenderContext::Run()
+    {
         InitVulkan();
         MainLoop();
         Cleanup();
     }
-}
+    void VulkanRenderContext::createDepthResources()
+    {
+        VkFormat _depthFormat = ImageUtils::FindDepthFormat();
+        ImageUtils::createImage(m_swapChain->GetSwapchainExtent().width, m_swapChain->GetSwapchainExtent().height,
+                                _depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, dethImageMemory);
+        ImageUtils::CreateImageView(depthImage, depthimageView, _depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+        ImageUtils::transitionImageLayout(
+            m_device, m_commandPool, VulkanContext::GetCurrentDevice()->GetGraphicsQueue(), depthImage, _depthFormat,
+            VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+    }
+
+} // namespace Thryve::Rendering
