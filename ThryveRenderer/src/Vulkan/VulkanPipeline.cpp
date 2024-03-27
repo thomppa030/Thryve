@@ -14,10 +14,27 @@ VulkanPipeline::VulkanPipeline(const VkRenderPass renderPass) :
         m_device = Thryve::Rendering::VulkanContext::GetCurrentDevice()->GetLogicalDevice();
 }
 
-VulkanPipeline::~VulkanPipeline() {
-    cleanup();
-}
+VulkanPipeline::~VulkanPipeline() { cleanup(); }
 
+VkPipelineDepthStencilStateCreateInfo VulkanPipeline::ConfigureDepthStencil(const PipelineConfigInfo &configInfo)
+{
+    VkPipelineDepthStencilStateCreateInfo depthStencil{};
+    depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depthStencil.depthTestEnable = VK_TRUE;
+    depthStencil.depthWriteEnable = VK_TRUE;
+
+    depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+
+    depthStencil.depthBoundsTestEnable = VK_FALSE;
+    depthStencil.minDepthBounds = 0.0f; // Optional
+    depthStencil.maxDepthBounds = 1.0f; // Optional
+
+    depthStencil.stencilTestEnable = VK_FALSE;
+    depthStencil.front = {}; // Optional
+    depthStencil.back = {}; // Optional
+    
+    return depthStencil;
+}
 void VulkanPipeline::CreatePipeline(const std::string &vertexShaderPath, const std::string &fragmentShaderPath
                                     , const PipelineConfigInfo &configInfo) {
     const auto vertShaderCode = ReadShaderFile(vertexShaderPath);
@@ -65,7 +82,8 @@ void VulkanPipeline::CreatePipeline(const std::string &vertexShaderPath, const s
     VkPipelineViewportStateCreateInfo ViewPortState = ConfigureViewportState(configInfo);
     VkPipelineRasterizationStateCreateInfo RasterizerState = ConfigureRasterizer(configInfo);
     VkPipelineMultisampleStateCreateInfo MultisampleState = ConfigureMultisampling(configInfo);
-    VkPipelineColorBlendStateCreateInfo ColorblendState = ConfigureColorBlending(configInfo, colorBlendAttachment);
+    VkPipelineColorBlendStateCreateInfo _colorblendState = ConfigureColorBlending(configInfo, colorBlendAttachment);
+    VkPipelineDepthStencilStateCreateInfo _depthStencilInfo = ConfigureDepthStencil(configInfo);
 
     VkGraphicsPipelineCreateInfo pipelineInfo{};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -76,8 +94,9 @@ void VulkanPipeline::CreatePipeline(const std::string &vertexShaderPath, const s
     pipelineInfo.pViewportState = &ViewPortState;
     pipelineInfo.pRasterizationState = &RasterizerState;
     pipelineInfo.pMultisampleState = &MultisampleState;
-    pipelineInfo.pColorBlendState = &ColorblendState;
+    pipelineInfo.pColorBlendState = &_colorblendState;
     pipelineInfo.pDynamicState = &dynamicState;
+    pipelineInfo.pDepthStencilState = &_depthStencilInfo;
     pipelineInfo.layout = m_pipelineLayout;
     pipelineInfo.renderPass = m_renderPass;
     pipelineInfo.subpass = 0;

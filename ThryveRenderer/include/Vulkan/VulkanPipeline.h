@@ -113,8 +113,10 @@ public:
     VulkanPipeline& operator=(VulkanPipeline&&) = delete;
 
     [[nodiscard]] VkPipeline GetPipeline() const {return m_graphicsPipeline;}
-    [[nodiscard]] VkPipelineLayout GetPipelineLayout() const {return m_pipelineLayout;}
+    [[nodiscard]] VkPipelineLayout GetPipelineLayout() const { return m_pipelineLayout; }
 
+    VkPipelineDepthStencilStateCreateInfo ConfigureDepthStencil(const PipelineConfigInfo & configInfo);
+    
     void CreatePipeline(const std::string& vertexShaderPath, const std::string& fragmentShaderPath, const PipelineConfigInfo& configInfo);
     void Bind(VkCommandBuffer commandBuffer);
 
