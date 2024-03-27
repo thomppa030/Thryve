@@ -7,13 +7,13 @@
 #include "SingleTimeCommandUtil.h"
 
 namespace ImageUtils {
-    
-    static bool hasStencilComponent(VkFormat format)
+
+    static bool HasStencilComponent(VkFormat format)
     {
         return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
     }
 
-    static void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling,
+    static void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling,
                             VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image,
                             VkDeviceMemory &imageMemory)
     {
@@ -53,7 +53,7 @@ namespace ImageUtils {
         vkBindImageMemory(_device, image, imageMemory, 0);
     }
 
-    static void CreateImageView(VkImage image, VkImageView imageView, VkFormat imageFormat, VkImageAspectFlags aspectFlags)
+    static void CreateImageView(VkImage image, VkImageView& imageView, VkFormat imageFormat, VkImageAspectFlags aspectFlags)
     {
         VkImageViewCreateInfo viewInfo{};
         viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -98,7 +98,7 @@ namespace ImageUtils {
         {
             barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 
-            if (hasStencilComponent(format))
+            if (HasStencilComponent(format))
             {
                 barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
             }
