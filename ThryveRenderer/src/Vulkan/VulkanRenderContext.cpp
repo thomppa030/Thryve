@@ -42,6 +42,7 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::CreateFramebuffers() {
+        m_swapChain->SetDepthImageView(depthimageView);
         m_swapChain->CreateFramebuffers();
     }
 
@@ -153,8 +154,9 @@ namespace Thryve::Rendering {
         m_descriptorManager = std::make_unique<VulkanDescriptorManager>(m_descriptorPool);
         CreateDescriptorSetLayout();
         CreateGraphicsPipeline();
-        CreateFramebuffers();
         CreateCommandPool();
+        CreateDepthResources();
+        CreateFramebuffers();
         CreateTextureImage();
         CreateTextureImageView();
         CreateTextureSampler();
@@ -269,9 +271,12 @@ namespace Thryve::Rendering {
         renderPassInfo.renderArea.offset = {0, 0};
         renderPassInfo.renderArea.extent = m_swapChain->GetSwapchainExtent();
 
-        constexpr VkClearValue clearColor = {{{0.5f, 0.7f, 0.5f, 1.0f}}};
-        renderPassInfo.clearValueCount = 1;
-        renderPassInfo.pClearValues = &clearColor;
+        std::array<VkClearValue, 2> _clearValues{};
+        _clearValues[0].color = {{0.5f, 0.7f, 0.5f, 1.0f}};
+        _clearValues[1].depthStencil = {1.f, 0};
+        
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(_clearValues.size());
+        renderPassInfo.pClearValues = _clearValues.data();
 
         vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -377,10 +382,10 @@ namespace Thryve::Rendering {
         MainLoop();
         Cleanup();
     }
-    void VulkanRenderContext::createDepthResources()
+    void VulkanRenderContext::CreateDepthResources()
     {
         VkFormat _depthFormat = ImageUtils::FindDepthFormat();
-        ImageUtils::createImage(m_swapChain->GetSwapchainExtent().width, m_swapChain->GetSwapchainExtent().height,
+        ImageUtils::CreateImage(m_swapChain->GetSwapchainExtent().width, m_swapChain->GetSwapchainExtent().height,
                                 _depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
                                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, dethImageMemory);
         ImageUtils::CreateImageView(depthImage, depthimageView, _depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);

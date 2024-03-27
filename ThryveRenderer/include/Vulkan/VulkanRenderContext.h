@@ -82,7 +82,7 @@ namespace Thryve::Rendering
         VkImageView depthimageView;
 
         // Depth Functions
-        void createDepthResources();
+        void CreateDepthResources();
 
         // Swap chain and rendering setup
         std::unique_ptr<VulkanSwapChain> m_swapChain;

@@ -14,6 +14,8 @@ public:
 
     bool HandlePresentResult(VkResult result);
 
+    void SetDepthImageView(VkImageView depthimageView) { m_DepthImageView = depthimageView; };
+
     VulkanSwapChain(const VulkanSwapChain&) = delete; // Disable copy operations
     VulkanSwapChain& operator=(const VulkanSwapChain&) = delete;
 
@@ -51,6 +53,7 @@ private:
 
     VkSwapchainKHR m_swapChain;
     std::vector<VkImage> m_swapChainImages;
+    VkImageView m_DepthImageView;
     VkFormat m_swapChainImageFormat;
     VkExtent2D m_swapChainExtent;
     std::vector<VkImageView> m_swapChainImageViews;

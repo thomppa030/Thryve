@@ -11,7 +11,7 @@ public:
 
     //Accessors
     void createTextureImage(const std::string &fileName);
-    void createTextureImageView() const;
+    void createTextureImageView();
     void createTextureSampler();
     [[nodiscard]] VkImage GetTextureImage() const {return m_textureImage;}
     [[nodiscard]] VkImageView GetTextureImageView() const {return m_textureImageView;}

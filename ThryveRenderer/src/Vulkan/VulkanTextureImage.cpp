@@ -64,7 +64,7 @@ void VulkanTextureImage::createTextureImage(const std::string &fileName)
 
     stbi_image_free((void *)(pixels));
 
-    ImageUtils::createImage(static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), VK_FORMAT_R8G8B8A8_SRGB,
+    ImageUtils::CreateImage(static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), VK_FORMAT_R8G8B8A8_SRGB,
                             VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_textureImage, m_textureImageMemory);
 
@@ -79,7 +79,7 @@ void VulkanTextureImage::createTextureImage(const std::string &fileName)
     vkFreeMemory(m_device, stagingBufferMemory, nullptr);
 }
 
-void VulkanTextureImage::createTextureImageView() const
+void VulkanTextureImage::createTextureImageView()
 {
     ImageUtils::CreateImageView(m_textureImage, imageView, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
 }

@@ -113,15 +113,16 @@ void VulkanSwapChain::CreateFramebuffers() {
     m_Framebuffers.resize(m_swapChainImageViews.size());
 
     for (size_t i = 0; i < m_swapChainImageViews.size(); i++) {
-        const VkImageView attachments[] = {
-            m_swapChainImageViews[i]
+        std::array<VkImageView, 2> _attachments = {
+            m_swapChainImageViews[i],
+            m_DepthImageView
         };
 
         VkFramebufferCreateInfo framebufferInfo{};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         framebufferInfo.renderPass = m_renderPass;/* The render pass that your framebuffers will be used with */;
-        framebufferInfo.attachmentCount = 1;
-        framebufferInfo.pAttachments = attachments;
+        framebufferInfo.attachmentCount = static_cast<uint32_t>(_attachments.size());
+        framebufferInfo.pAttachments = _attachments.data();
         framebufferInfo.width = m_swapChainExtent.width;
         framebufferInfo.height = m_swapChainExtent.height;
         framebufferInfo.layers = 1;
