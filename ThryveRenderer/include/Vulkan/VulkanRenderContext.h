@@ -84,6 +84,13 @@ namespace Thryve::Rendering
         // Depth Functions
         void CreateDepthResources();
 
+        std::vector<Vertex3D> ModelVertices;
+        std::vector<uint32_t> ModelIndices;
+        VkBuffer vertexBufer;
+        VkDeviceMemory vertexBufferMemory;
+
+        void LoadModel();
+
         // Swap chain and rendering setup
         std::unique_ptr<VulkanSwapChain> m_swapChain;
         VkRenderPass m_renderPass;

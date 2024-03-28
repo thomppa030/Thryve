@@ -6,6 +6,8 @@
 
 
 #define STB_IMAGE_IMPLEMENTATION
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "tiny_obj_loader.h"
 #include <iostream>
 
 #include "Config.h"
@@ -127,7 +129,7 @@ namespace Thryve::Rendering {
 
     void VulkanRenderContext::CreateTextureImage() {
         m_VulkanTextureImage = std::make_unique<VulkanTextureImage>(m_cmdPoolManager->GetCommandPool(), m_commandBuffer);
-        m_VulkanTextureImage->createTextureImage(std::string(RESOURCE_DIR)+"/statue.jpg");
+        m_VulkanTextureImage->createTextureImage(std::string(RESOURCE_DIR)+"/viking_room.png");
         m_textureImage = m_VulkanTextureImage->GetTextureImage();
     }
 
@@ -160,6 +162,7 @@ namespace Thryve::Rendering {
         CreateTextureImage();
         CreateTextureImageView();
         CreateTextureSampler();
+        LoadModel();
         CreateVertexBuffer();
         CreateIndexBuffer();
         CreateUniformBuffer();
@@ -233,12 +236,12 @@ namespace Thryve::Rendering {
     void VulkanRenderContext::CreateVertexBuffer() {
         auto _deviceSelector = VulkanContext::GetCurrentDevice();
         m_vulkanVertexBuffer = std::make_unique<VulkanVertexBuffer<Vertex3D>>(m_device, m_physicalDevice, m_commandPool, _deviceSelector->GetGraphicsQueue());
-        m_vulkanVertexBuffer->Create(VERTICES_3D);
+        m_vulkanVertexBuffer->Create(ModelVertices);
     }
 
     void VulkanRenderContext::CreateIndexBuffer() {
         m_indexBuffer = std::make_unique<VulkanIndexBuffer>(m_commandPool);
-        m_indexBuffer->Create(INDICES_3D);
+        m_indexBuffer->Create(ModelIndices);
     }
 
     void VulkanRenderContext::CreateUniformBuffer() {
@@ -328,7 +331,7 @@ namespace Thryve::Rendering {
         const float _deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(_currentTime - _startTime).count();
 
         UniformBufferObject _ubo{};
-        _ubo.model = glm::rotate(glm::mat4(1.0f), _deltaTime * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        _ubo.model = glm::rotate(glm::mat4(1.0f), _deltaTime * glm::radians(.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         _ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         _ubo.projection = glm::perspective(glm::radians(45.0f)
                                            , m_swapChain->GetSwapchainExtent().width / static_cast<float>(m_swapChain->
@@ -395,6 +398,45 @@ namespace Thryve::Rendering {
         ImageUtils::transitionImageLayout(
             m_device, m_commandPool, VulkanContext::GetCurrentDevice()->GetGraphicsQueue(), depthImage, _depthFormat,
             VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+    }
+    void VulkanRenderContext::LoadModel()
+    {
+        tinyobj::attrib_t _attrib;
+
+        std::vector<tinyobj::shape_t> _shapes;
+        std::vector<tinyobj::material_t> _materials;
+        std::string _err, _warn;
+
+        auto Model_Path = std::string(RESOURCE_DIR)+"/viking_room.obj";
+
+        if (!tinyobj::LoadObj(&_attrib, &_shapes, &_materials, &_warn, &_err, Model_Path.c_str()))
+        {
+            throw std::runtime_error(_warn + _err);
+        }
+
+        for (const auto& _shape : _shapes)
+        {
+            for (const auto& _index : _shape.mesh.indices)
+            {
+                Vertex3D _vertex{};
+
+                _vertex.pos = {
+                    _attrib.vertices[3 * _index.vertex_index + 0],
+                    _attrib.vertices[3 * _index.vertex_index + 1],
+                    _attrib.vertices[3 * _index.vertex_index + 2]
+                };
+
+                _vertex.texCoord = {
+                    _attrib.texcoords[2 * _index.texcoord_index + 0],
+                    1.0f - _attrib.texcoords[2 * _index.texcoord_index + 1]
+                };
+
+                _vertex.normal = {1.0f, 1.0f, 1.0f};
+
+                ModelVertices.push_back(_vertex);
+                ModelIndices.push_back(ModelIndices.size());
+            }
+        }
     }
 
 } // namespace Thryve::Rendering
