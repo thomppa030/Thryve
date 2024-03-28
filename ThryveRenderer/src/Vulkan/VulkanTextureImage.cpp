@@ -81,7 +81,7 @@ void VulkanTextureImage::createTextureImage(const std::string &fileName)
 
 void VulkanTextureImage::createTextureImageView()
 {
-    ImageUtils::CreateImageView(m_textureImage, imageView, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+    ImageUtils::CreateImageView(m_textureImage, m_textureImageView, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
 void VulkanTextureImage::createTextureSampler() {

@@ -195,6 +195,9 @@ namespace Thryve::Rendering {
         m_pipeline.reset();
         m_renderPassFactory.reset();
         m_swapChain.reset();
+        vkDestroyImageView(m_device, depthimageView, nullptr);
+        vkDestroyImage(m_device, depthImage, nullptr);
+        vkFreeMemory(m_device, dethImageMemory, nullptr);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
              vkDestroyBuffer(m_device, m_uniformBuffers[i], nullptr);
