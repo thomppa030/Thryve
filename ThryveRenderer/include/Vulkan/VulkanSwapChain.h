@@ -42,6 +42,9 @@ public:
     void SetRenderPass(VkRenderPass renderPass);
 
     VkResult PresentImage(uint32_t imageIndex, VkSemaphore renderFinishedSemaphore) const;
+    
+    void CreateSwapChain(uint32_t width, uint32_t height);
+    void CreateImageViews(); // Helper method to create image views for the swap chain images
 
 private:
     Thryve::Core::SharedRef<VulkanDeviceSelector> m_deviceSelector;
@@ -59,8 +62,6 @@ private:
     std::vector<VkImageView> m_swapChainImageViews;
     std::vector<VkFramebuffer> m_Framebuffers;
 
-    void CreateSwapChain(uint32_t width, uint32_t height);
-    void CreateImageViews(); // Helper method to create image views for the swap chain images
     // Additional helper methods for swap chain creation and management
 
     // Utility methods for choosing swap chain surface format, present mode, and extent

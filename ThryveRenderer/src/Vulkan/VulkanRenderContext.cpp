@@ -127,9 +127,10 @@ namespace Thryve::Rendering {
         m_descriptorSetLayout = m_descriptorManager->GetDescriptorSetLayout();
     }
 
-    void VulkanRenderContext::CreateTextureImage() {
-        m_VulkanTextureImage = std::make_unique<VulkanTextureImage>(m_cmdPoolManager->GetCommandPool(), m_commandBuffer);
-        m_VulkanTextureImage->createTextureImage(std::string(RESOURCE_DIR)+"/viking_room.png");
+    void VulkanRenderContext::CreateTextureImage(const std::string &path) {
+        m_VulkanTextureImage =
+            std::make_unique<VulkanTextureImage>(m_cmdPoolManager->GetCommandPool(), m_commandBuffer);
+        m_VulkanTextureImage->createTextureImage(path);
         m_textureImage = m_VulkanTextureImage->GetTextureImage();
     }
 
@@ -159,10 +160,12 @@ namespace Thryve::Rendering {
         CreateCommandPool();
         CreateDepthResources();
         CreateFramebuffers();
-        CreateTextureImage();
+        auto _imagePath = std::string(RESOURCE_DIR) + "/viking_room.png";
+        CreateTextureImage(_imagePath);
         CreateTextureImageView();
         CreateTextureSampler();
-        LoadModel();
+        auto _modelPath = std::string(RESOURCE_DIR)+"/viking_room.obj";
+        LoadModel(_modelPath);
         CreateVertexBuffer();
         CreateIndexBuffer();
         CreateUniformBuffer();
@@ -178,13 +181,36 @@ namespace Thryve::Rendering {
         m_physicalDevice = _deviceSelector->GetPhysicalDevice();
     }
 
-    void VulkanRenderContext::MainLoop() {
-        while (!glfwWindowShouldClose(VulkanContext::GetWindow())) {
+    void VulkanRenderContext::MainLoop()
+    {
+        while (!glfwWindowShouldClose(VulkanContext::GetWindow()))
+        {
             glfwPollEvents();
             DrawFrame();
         }
 
         VK_CALL(vkDeviceWaitIdle(m_device));
+    }
+    void VulkanRenderContext::RecreateSwapChain()
+    {
+        int _width = 0, _height = 0;
+        glfwGetFramebufferSize(VulkanContext::GetWindow(), &_width, &_height);
+        while (_width == 0 || _height == 0) {
+            glfwGetFramebufferSize(VulkanContext::GetWindow(), &_width, &_height);
+            glfwWaitEvents();
+        }
+
+        vkDeviceWaitIdle(m_device);
+
+        vkDestroyImageView(m_device, depthimageView, nullptr);
+        vkDestroyImage(m_device, depthImage, nullptr);
+        vkFreeMemory(m_device, dethImageMemory, nullptr);
+
+        m_swapChain->CleanupSwapChain();
+
+        m_swapChain->InitializeSwapChain(_width,_height);
+        CreateDepthResources();
+        CreateFramebuffers();
     }
 
     void VulkanRenderContext::Cleanup() {
@@ -236,11 +262,13 @@ namespace Thryve::Rendering {
     void VulkanRenderContext::CreateVertexBuffer() {
         auto _deviceSelector = VulkanContext::GetCurrentDevice();
         m_vulkanVertexBuffer = std::make_unique<VulkanVertexBuffer<Vertex3D>>(m_device, m_physicalDevice, m_commandPool, _deviceSelector->GetGraphicsQueue());
+        std::cout << "Model Vertex Count: " << ModelVertices.size() << "\n";
         m_vulkanVertexBuffer->Create(ModelVertices);
     }
 
     void VulkanRenderContext::CreateIndexBuffer() {
         m_indexBuffer = std::make_unique<VulkanIndexBuffer>(m_commandPool);
+        std::cout << "Model Index Count: " << ModelIndices.size() << "\n";
         m_indexBuffer->Create(ModelIndices);
     }
 
@@ -278,7 +306,7 @@ namespace Thryve::Rendering {
         renderPassInfo.renderArea.extent = m_swapChain->GetSwapchainExtent();
 
         std::array<VkClearValue, 2> _clearValues{};
-        _clearValues[0].color = {{0.5f, 0.7f, 0.5f, 1.0f}};
+        _clearValues[0].color = {{0.3f, 0.3f, 0.3f, 1.0f}};
         _clearValues[1].depthStencil = {1.f, 0};
         
         renderPassInfo.clearValueCount = static_cast<uint32_t>(_clearValues.size());
@@ -354,7 +382,7 @@ namespace Thryve::Rendering {
                 const uint32_t _imageIndex = optionalImageIndex.value();
 
                 if (!m_swapChain->HandleAcquireResult(result)) {
-                    m_swapChain->RecreateSwapChain();
+                    RecreateSwapChain();
                 }
 
                 UpdateUniformBuffer(currentFrame);
@@ -370,7 +398,7 @@ namespace Thryve::Rendering {
 
                 result = m_swapChain->PresentImage(_imageIndex, _syncObjects.render_finished_semaphore);
                 if (m_swapChain->HandlePresentResult(result)) {
-                    m_swapChain->RecreateSwapChain();
+                    RecreateSwapChain();
                 }
 
                 currentFrame = m_FrameSynchronizer->AdvanceFrame(currentFrame);
@@ -399,7 +427,7 @@ namespace Thryve::Rendering {
             m_device, m_commandPool, VulkanContext::GetCurrentDevice()->GetGraphicsQueue(), depthImage, _depthFormat,
             VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     }
-    void VulkanRenderContext::LoadModel()
+    void VulkanRenderContext::LoadModel(const std::string& path)
     {
         tinyobj::attrib_t _attrib;
 
@@ -407,9 +435,8 @@ namespace Thryve::Rendering {
         std::vector<tinyobj::material_t> _materials;
         std::string _err, _warn;
 
-        auto Model_Path = std::string(RESOURCE_DIR)+"/viking_room.obj";
 
-        if (!tinyobj::LoadObj(&_attrib, &_shapes, &_materials, &_warn, &_err, Model_Path.c_str()))
+        if (!tinyobj::LoadObj(&_attrib, &_shapes, &_materials, &_warn, &_err, path.c_str()))
         {
             throw std::runtime_error(_warn + _err);
         }

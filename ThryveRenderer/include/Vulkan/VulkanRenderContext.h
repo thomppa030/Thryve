@@ -89,7 +89,7 @@ namespace Thryve::Rendering
         VkBuffer vertexBufer;
         VkDeviceMemory vertexBufferMemory;
 
-        void LoadModel();
+        void LoadModel(const std::string& path);
 
         // Swap chain and rendering setup
         std::unique_ptr<VulkanSwapChain> m_swapChain;
@@ -140,7 +140,7 @@ namespace Thryve::Rendering
         void CreateIndexBuffer();
         void CreateUniformBuffer();
         void CreateDescriptorSetLayout();
-        void CreateTextureImage();
+        void CreateTextureImage(const std::string &path);
         void CreateTextureImageView();
         void CreateTextureSampler();
         [[nodiscard]] VkDescriptorPool CreateDescriptorPool() const;
@@ -150,6 +150,7 @@ namespace Thryve::Rendering
         void RecordCommandBufferSegment(VkCommandBuffer commandBuffer, uint32_t imageIndex) const;
         // Main loop and frame drawing
         void MainLoop();
+        void RecreateSwapChain();
         void DrawFrame();
         void UpdateUniformBuffer(uint32_t currentImage) const;
         // Synchronization methods
