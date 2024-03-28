@@ -26,6 +26,7 @@ target_include_directories(ThryveRenderer
         ${Vulkan_INCLUDE_DIRS}
         external/glm
         external/stb
+        external/tinyobjloader
         external/VulkanMemoryAllocator/include
 )
 
