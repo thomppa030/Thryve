@@ -22,7 +22,7 @@ public:
     VulkanSwapChain(VulkanSwapChain&&) noexcept; // Enable move semantics
     VulkanSwapChain& operator=(VulkanSwapChain&&) noexcept;
 
-    void InitializeSwapChain(uint32_t width, uint32_t height);
+    void InitializeSwapChain();
     void CleanupSwapChain() const; // For explicit cleanup, can be called before the destructor
 
     void CreateFramebuffers();
@@ -43,7 +43,7 @@ public:
 
     VkResult PresentImage(uint32_t imageIndex, VkSemaphore renderFinishedSemaphore) const;
     
-    void CreateSwapChain(uint32_t width, uint32_t height);
+    void CreateSwapChain();
     void CreateImageViews(); // Helper method to create image views for the swap chain images
 
 private:

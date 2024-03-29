@@ -92,8 +92,8 @@ VulkanSwapChain & VulkanSwapChain::operator=(VulkanSwapChain && other) noexcept 
     return  *this;
 }
 
-void VulkanSwapChain::InitializeSwapChain(uint32_t width, uint32_t height) {
-    CreateSwapChain(width, height);
+void VulkanSwapChain::InitializeSwapChain() {
+    CreateSwapChain();
     CreateImageViews();
 }
 
@@ -134,6 +134,7 @@ void VulkanSwapChain::CreateFramebuffers() {
 }
 
 void VulkanSwapChain::RecreateSwapChain() {
+
         int _width = 0, _height = 0;
         glfwGetFramebufferSize(m_window, &_width, &_height);
         while (_width == 0 || _height == 0) {
@@ -144,11 +145,11 @@ void VulkanSwapChain::RecreateSwapChain() {
         vkDeviceWaitIdle(m_device);
 
         CleanupSwapChain();
-        InitializeSwapChain(_width,_height);
+        InitializeSwapChain();
         CreateFramebuffers();
 }
 
-void VulkanSwapChain::CreateSwapChain(uint32_t width, uint32_t height) {
+void VulkanSwapChain::CreateSwapChain() {
         SwapChainSupportDetails swapChainSupport = m_deviceSelector->QuerySwapChainSupport(m_physicalDevice);
 
         const VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.Formats);
