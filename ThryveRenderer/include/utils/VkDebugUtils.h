@@ -106,6 +106,8 @@ inline std::string vkResultToString(VkResult result)
         break;
     case VK_RESULT_MAX_ENUM:
         break;
+        default:
+           return  "Result not Implemented, yet!";
     }
 }
 

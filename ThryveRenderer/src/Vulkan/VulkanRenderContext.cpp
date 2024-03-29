@@ -11,6 +11,7 @@
 #include <iostream>
 
 #include "Config.h"
+#include "Core/Profiling.h"
 #include "Core/ServiceRegistry.h"
 #include "Vulkan/VulkanContext.h"
 #include "Vulkan/VulkanDescriptorManager.h"
@@ -32,19 +33,21 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::CreateSwapChain() {
+        PROFILE_FUNCTION();
         int width, height = 0;
         glfwGetFramebufferSize(VulkanContext::GetWindow(), &width, &height);
         m_swapChain->InitializeSwapChain();
     }
 
     void VulkanRenderContext::InitRenderPassFactory() {
+        PROFILE_FUNCTION()
         m_renderPassFactory = std::make_unique<VulkanRenderPassBuilder>();
         m_renderPassFactory->CreateStandardRenderPasses(m_swapChain->GetSwapchainImageFormat());
     }
 
     void VulkanRenderContext::CreateFramebuffers() {
         m_swapChain->SetDepthImageView(depthimageView);
-        m_swapChain->CreateFramebuffers();
+        m_swapChain->CreateFramebuffers(m_device);
     }
 
     void VulkanRenderContext::CreateCommandPool() {
@@ -132,6 +135,7 @@ namespace Thryve::Rendering {
 
     void VulkanRenderContext::InitVulkan()
     {
+        PROFILE_FUNCTION();
         PickSuitableDevices();
         m_swapChain = std::make_unique<VulkanSwapChain>();
         CreateSwapChain();
@@ -162,6 +166,7 @@ namespace Thryve::Rendering {
     }
     void VulkanRenderContext::PickSuitableDevices()
     {
+        PROFILE_FUNCTION();
         auto _deviceSelector = VulkanContext::GetCurrentDevice();
         m_device = _deviceSelector->GetLogicalDevice();
         m_physicalDevice = _deviceSelector->GetPhysicalDevice();
@@ -179,6 +184,7 @@ namespace Thryve::Rendering {
     }
     void VulkanRenderContext::RecreateSwapChain()
     {
+        PROFILE_FUNCTION()
         int _width = 0, _height = 0;
         glfwGetFramebufferSize(VulkanContext::GetWindow(), &_width, &_height);
         while (_width == 0 || _height == 0) {
@@ -200,7 +206,7 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::Cleanup() {
-
+        PROFILE_FUNCTION();
         m_FrameSynchronizer.reset();
         m_cmdBuffer->Free(m_commandBuffer);
         m_cmdBuffer.reset();
@@ -227,7 +233,7 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::CreateGraphicsPipeline() {
-
+        PROFILE_FUNCTION();
         PipelineConfigInfo configInfo;
         configInfo.vertexInput.bindings = {Vertex3D::getBindingDescription()};
         configInfo.vertexInput.attributes = Vertex3D::getAttributeDescriptions();
@@ -246,6 +252,7 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::CreateVertexBuffer() {
+        PROFILE_FUNCTION();
         auto _deviceSelector = VulkanContext::GetCurrentDevice();
         m_vulkanVertexBuffer = std::make_unique<VulkanVertexBuffer<Vertex3D>>(m_device, m_physicalDevice, m_commandPool, _deviceSelector->GetGraphicsQueue());
         std::cout << "Model Vertex Count: " << ModelVertices.size() << "\n";
@@ -253,12 +260,14 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::CreateIndexBuffer() {
+        PROFILE_FUNCTION();
         m_indexBuffer = std::make_unique<VulkanIndexBuffer>(m_commandPool);
         std::cout << "Model Index Count: " << ModelIndices.size() << "\n";
         m_indexBuffer->Create(ModelIndices);
     }
 
     void VulkanRenderContext::CreateUniformBuffer() {
+        PROFILE_FUNCTION();
         m_uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
         m_uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
         m_uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
@@ -272,6 +281,7 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::CreateCommandBuffer() {
+        PROFILE_FUNCTION()
         m_commandBuffer = m_cmdBuffer->Allocate();
     }
 
@@ -334,6 +344,7 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::CreateSyncObjects() {
+        PROFILE_FUNCTION();
         m_FrameSynchronizer = std::make_unique<VulkanFrameSynchronizer>(MAX_FRAMES_IN_FLIGHT);
     }
 
@@ -355,8 +366,8 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::DrawFrame() {
+        PROFILE_FUNCTION()
         auto& _syncObjects = m_FrameSynchronizer->GetSyncObjects(currentFrame);
-        auto frameStart = std::chrono::high_resolution_clock::now();
         if (!m_FrameSynchronizer->WaitForFences(currentFrame)) {
             VK_CALL(vkWaitForFences(m_device, 1, &_syncObjects.in_flight_fence, VK_TRUE, UINT64_MAX));
         }
@@ -389,10 +400,6 @@ namespace Thryve::Rendering {
                 currentFrame = m_FrameSynchronizer->AdvanceFrame(currentFrame);
             }
         }
-        auto FrameEnd = std::chrono::high_resolution_clock::now();
-        auto FramTimeInMs = std::chrono::duration_cast<std::chrono::microseconds>(FrameEnd - frameStart).count() / 1000.0f;
-
-        std::cout << FramTimeInMs << "\n";
     }
 
     void VulkanRenderContext::Run()
@@ -403,6 +410,7 @@ namespace Thryve::Rendering {
     }
     void VulkanRenderContext::CreateDepthResources()
     {
+        PROFILE_FUNCTION()
         VkFormat _depthFormat = ImageUtils::FindDepthFormat();
         ImageUtils::CreateImage(m_swapChain->GetSwapchainExtent().width, m_swapChain->GetSwapchainExtent().height,
                                 _depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
@@ -414,6 +422,7 @@ namespace Thryve::Rendering {
     }
     void VulkanRenderContext::LoadModel(const std::string& path)
     {
+        PROFILE_FUNCTION()
         tinyobj::attrib_t _attrib;
 
         std::vector<tinyobj::shape_t> _shapes;

@@ -23,6 +23,7 @@ VulkanRenderPass * VulkanRenderPassBuilder::GetRenderPass(const std::string &key
 }
 
 void VulkanRenderPassBuilder::CreateStandardRenderPasses(const VkFormat swapChainImageFormat) {
+    PROFILE_FUNCTION()
 
         VkAttachmentDescription colorAttachment{};
         colorAttachment.format = swapChainImageFormat;
