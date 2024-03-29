@@ -33,7 +33,35 @@ namespace Thryve::Rendering {
         VK_CALL(vkAllocateDescriptorSets(m_device, &allocInfo, m_descriptorSets.data()));
     }
 
-    void VulkanDescriptorManager::UpdateDescriptorSets(const std::vector<VkWriteDescriptorSet> &writeSets) const {
+    // In VulkanDescriptorManager class, add these helper methods:
+    VkWriteDescriptorSet VulkanDescriptorManager::createBufferDescriptorWrite(VkDescriptorSet descriptorSet, uint32_t dstBinding, VkDescriptorBufferInfo* bufferInfo) {
+        VkWriteDescriptorSet descriptorWrite{};
+        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrite.dstSet = descriptorSet;
+        descriptorWrite.dstBinding = dstBinding;
+        descriptorWrite.dstArrayElement = 0;
+        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrite.descriptorCount = 1;
+        descriptorWrite.pBufferInfo = bufferInfo;
+        descriptorWrite.pTexelBufferView = nullptr; // Optional
+        return descriptorWrite;
+    }
+
+    VkWriteDescriptorSet VulkanDescriptorManager::createImageDescriptorWrite(VkDescriptorSet descriptorSet, uint32_t dstBinding, VkDescriptorImageInfo* imageInfo) {
+        VkWriteDescriptorSet descriptorWrite{};
+        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrite.dstSet = descriptorSet;
+        descriptorWrite.dstBinding = dstBinding;
+        descriptorWrite.dstArrayElement = 0;
+        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrite.descriptorCount = 1;
+        descriptorWrite.pImageInfo = imageInfo; // Optional
+        descriptorWrite.pTexelBufferView = nullptr; // Optional
+        return descriptorWrite;
+    }
+
+    void VulkanDescriptorManager::UpdateDescriptorSets(const std::vector<VkWriteDescriptorSet> &writeSets) const
+    {
         vkUpdateDescriptorSets(m_device, static_cast<uint32_t>(writeSets.size()), writeSets.data(), 0, nullptr);
     }
 }

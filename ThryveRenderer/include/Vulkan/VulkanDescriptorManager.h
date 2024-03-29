@@ -3,10 +3,11 @@
 //
 #pragma once
 
+#include "Core/Ref.h"
 #include "VulkanDescriptor.h"
 
 namespace Thryve::Rendering {
-    class VulkanDescriptorManager {
+    class VulkanDescriptorManager : public Core::ReferenceCounted {
     public:
         VulkanDescriptorManager(VkDescriptorPool descriptorPool);
         ~VulkanDescriptorManager() = default;
@@ -19,8 +20,14 @@ namespace Thryve::Rendering {
         VulkanDescriptorManager(VulkanDescriptorManager &&) noexcept = default;
         VulkanDescriptorManager &operator=(VulkanDescriptorManager &&) noexcept = default;
 
+        VkWriteDescriptorSet createBufferDescriptorWrite(VkDescriptorSet descriptorSet, uint32_t dstBinding,
+                                                         VkDescriptorBufferInfo *bufferInfo);
+
+        VkWriteDescriptorSet createImageDescriptorWrite(VkDescriptorSet descriptorSet, uint32_t dstBinding,
+                                                        VkDescriptorImageInfo *imageInfo);
 
         void CreateDescriptorSetLayout(const std::vector<VulkanDescriptor> &descriptors);
+
         void AllocateDescriptorSets(uint32_t setCount);
         // Function to update the descriptor sets with actual resources
         void UpdateDescriptorSets(const std::vector<VkWriteDescriptorSet> &writeSets) const;
