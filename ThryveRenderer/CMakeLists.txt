@@ -8,9 +8,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Use modern CMake practices for finding and linking to libraries
 find_package(Vulkan REQUIRED)
 
+add_compile_definitions(ENABLE_PROFILING)
 
 # Define the library target
-add_library(ThryveRenderer)
+add_library(ThryveRenderer
+        include/Core/Profiling.h
+        src/Core/Profiling.cpp)
 
 # Precompiled header
 set(PRECOMPILE_HEADER "include/pch.h")
