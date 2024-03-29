@@ -25,7 +25,7 @@ public:
     void InitializeSwapChain();
     void CleanupSwapChain() const; // For explicit cleanup, can be called before the destructor
 
-    void CreateFramebuffers();
+    void CreateFramebuffers(VkDevice device);
     void RecreateSwapChain();
 
     [[nodiscard]] VkSwapchainKHR GetSwapchain() const {return m_swapChain;}
@@ -48,17 +48,18 @@ public:
 
 private:
     Thryve::Core::SharedRef<VulkanDeviceSelector> m_deviceSelector;
-    VkPhysicalDevice m_physicalDevice;
-    VkDevice m_device;
     VkSurfaceKHR m_surface;
     GLFWwindow* m_window;
     VkRenderPass m_renderPass;
 
     VkSwapchainKHR m_swapChain;
     std::vector<VkImage> m_swapChainImages;
+
     VkImageView m_DepthImageView;
+
     VkFormat m_swapChainImageFormat;
     VkExtent2D m_swapChainExtent;
+
     std::vector<VkImageView> m_swapChainImageViews;
     std::vector<VkFramebuffer> m_Framebuffers;
 

@@ -15,8 +15,6 @@ VulkanSwapChain::VulkanSwapChain() :  m_renderPass(nullptr), m_swapChain(nullptr
 
     m_deviceSelector = Thryve::Rendering::VulkanContext::Get()->GetDevice();
     m_surface = Thryve::Rendering::VulkanContext::GetSurface();
-    m_physicalDevice = m_deviceSelector->GetPhysicalDevice();
-    m_device = m_deviceSelector->GetLogicalDevice();
     m_window = Thryve::Rendering::VulkanContext::GetWindow();
 
 }
@@ -51,8 +49,6 @@ bool VulkanSwapChain::HandlePresentResult(const VkResult result) {
 }
 
 VulkanSwapChain::VulkanSwapChain(VulkanSwapChain &&other) noexcept : m_deviceSelector(other.m_deviceSelector),
-                                                                     m_physicalDevice(other.m_physicalDevice),
-                                                                     m_device(other.m_device),
                                                                      m_surface(other.m_surface),
                                                                      m_window(other.m_window),
                                                                      m_swapChain(other.m_swapChain),
@@ -60,34 +56,27 @@ VulkanSwapChain::VulkanSwapChain(VulkanSwapChain &&other) noexcept : m_deviceSel
                                                                      m_swapChainExtent()
 {
     other.m_deviceSelector = nullptr;
-    other.m_device = VK_NULL_HANDLE;
     other.m_surface = VK_NULL_HANDLE;
     other.m_swapChain = VK_NULL_HANDLE;
-    other.m_physicalDevice = VK_NULL_HANDLE;
-    other.m_device = VK_NULL_HANDLE;
 }
 
 VulkanSwapChain & VulkanSwapChain::operator=(VulkanSwapChain && other) noexcept {
     if (this != &other) {
         if (m_swapChain != VK_NULL_HANDLE) {
-            vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);
+            const VkDevice _device = Thryve::Rendering::VulkanContext::GetCurrentDevice()->GetLogicalDevice();
+            vkDestroySwapchainKHR(_device, m_swapChain, nullptr);
         }
     }
-    m_device = other.m_device;
     m_surface = other.m_surface,
     m_window = other.m_window,
     m_deviceSelector = other.m_deviceSelector,
-    m_physicalDevice = other.m_physicalDevice,
     m_swapChain = other.m_swapChain,
     m_swapChainImageFormat = other.m_swapChainImageFormat,
     m_swapChainExtent = other.m_swapChainExtent;
 
     other.m_deviceSelector = nullptr;
-    other.m_device = VK_NULL_HANDLE;
     other.m_surface = VK_NULL_HANDLE;
     other.m_swapChain = VK_NULL_HANDLE;
-    other.m_physicalDevice = VK_NULL_HANDLE;
-    other.m_device = VK_NULL_HANDLE;
 
     return  *this;
 }
@@ -98,18 +87,19 @@ void VulkanSwapChain::InitializeSwapChain() {
 }
 
 void VulkanSwapChain::CleanupSwapChain() const {
+    VkDevice _device = Thryve::Rendering::VulkanContext::GetCurrentDevice()->GetLogicalDevice();
     for (const auto framebuffer: m_Framebuffers) {
-        vkDestroyFramebuffer(m_device, framebuffer, nullptr);
+        vkDestroyFramebuffer(_device, framebuffer, nullptr);
     }
 
     for (const auto imageView: m_swapChainImageViews) {
-        vkDestroyImageView(m_device, imageView, nullptr);
+        vkDestroyImageView(_device, imageView, nullptr);
     }
 
-    vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);
+    vkDestroySwapchainKHR(_device, m_swapChain, nullptr);
 }
 
-void VulkanSwapChain::CreateFramebuffers() {
+void VulkanSwapChain::CreateFramebuffers(VkDevice device) {
     m_Framebuffers.resize(m_swapChainImageViews.size());
 
     for (size_t i = 0; i < m_swapChainImageViews.size(); i++) {
@@ -127,7 +117,7 @@ void VulkanSwapChain::CreateFramebuffers() {
         framebufferInfo.height = m_swapChainExtent.height;
         framebufferInfo.layers = 1;
 
-        if (vkCreateFramebuffer(m_device, &framebufferInfo, nullptr, &m_Framebuffers[i]) != VK_SUCCESS) {
+        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &m_Framebuffers[i]) != VK_SUCCESS) {
             throw std::runtime_error("failed to create framebuffer!");
         }
     }
@@ -142,19 +132,31 @@ void VulkanSwapChain::RecreateSwapChain() {
             glfwWaitEvents();
         }
 
-        vkDeviceWaitIdle(m_device);
+        VkDevice _device = Thryve::Rendering::VulkanContext::GetCurrentDevice()->GetLogicalDevice();
+
+        vkDeviceWaitIdle(_device);
 
         CleanupSwapChain();
         InitializeSwapChain();
-        CreateFramebuffers();
+        CreateFramebuffers(_device);
 }
 
 void VulkanSwapChain::CreateSwapChain() {
-        SwapChainSupportDetails swapChainSupport = m_deviceSelector->QuerySwapChainSupport(m_physicalDevice);
 
+        VkDevice _device = m_deviceSelector->GetLogicalDevice();
+        VkPhysicalDevice _physicalDevice = m_deviceSelector->GetPhysicalDevice();
+
+        SwapChainSupportDetails swapChainSupport = m_deviceSelector->QuerySwapChainSupport(_physicalDevice);
+
+        VkSwapchainKHR oldSwapchain = m_swapChain;
+
+        //TODO Refactor from class to utilityclass, maybe? Could also be too much abstraction
         const VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.Formats);
         const VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.PresentModes);
         const VkExtent2D extent = ChooseSwapExtent(swapChainSupport.Capabilities);
+
+        //TODO Update Dimensions here?
+
 
         uint32_t imageCount = swapChainSupport.Capabilities.minImageCount + 1;
         if (swapChainSupport.Capabilities.maxImageCount > 0 && imageCount > swapChainSupport.Capabilities.maxImageCount) {
@@ -172,7 +174,7 @@ void VulkanSwapChain::CreateSwapChain() {
         createInfo.imageArrayLayers = 1;
         createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        auto [graphicsFamily, presentFamily] = m_deviceSelector->FindQueueFamilies(m_physicalDevice);
+        auto [graphicsFamily, presentFamily] = m_deviceSelector->FindQueueFamilies(_physicalDevice);
         const uint32_t queueFamilyIndices[] = {graphicsFamily.value(), presentFamily.value()};
 
         if (graphicsFamily != presentFamily) {
@@ -188,13 +190,13 @@ void VulkanSwapChain::CreateSwapChain() {
         createInfo.presentMode = presentMode;
         createInfo.clipped = VK_TRUE;
 
-        if (vkCreateSwapchainKHR(m_device, &createInfo, nullptr, &m_swapChain) != VK_SUCCESS) {
+        if (vkCreateSwapchainKHR(_device, &createInfo, nullptr, &m_swapChain) != VK_SUCCESS) {
             throw std::runtime_error("failed to create swap chain!");
         }
 
-        vkGetSwapchainImagesKHR(m_device, m_swapChain, &imageCount, nullptr);
+        vkGetSwapchainImagesKHR(_device, m_swapChain, &imageCount, nullptr);
         m_swapChainImages.resize(imageCount);
-        vkGetSwapchainImagesKHR(m_device, m_swapChain, &imageCount, m_swapChainImages.data());
+        vkGetSwapchainImagesKHR(_device, m_swapChain, &imageCount, m_swapChainImages.data());
 
         m_swapChainImageFormat = surfaceFormat.format;
         m_swapChainExtent = extent;
@@ -219,9 +221,8 @@ void VulkanSwapChain::CreateImageViews() {
             createInfo.subresourceRange.baseArrayLayer = 0;
             createInfo.subresourceRange.layerCount = 1;
 
-            if (vkCreateImageView(m_device, &createInfo, nullptr, &m_swapChainImageViews[i]) != VK_SUCCESS) {
-                throw std::runtime_error("failed to create image views!");
-            }
+            const VkDevice _device = Thryve::Rendering::VulkanContext::GetCurrentDevice()->GetLogicalDevice();
+            VK_CALL(vkCreateImageView(_device, &createInfo, nullptr, &m_swapChainImageViews[i]));
         }
 }
 
@@ -234,7 +235,6 @@ VkSurfaceFormatKHR VulkanSwapChain::ChooseSwapSurfaceFormat(const std::vector<Vk
         }
 
         return availableFormats[0];
-
 }
 
 VkPresentModeKHR VulkanSwapChain::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes) {
@@ -270,7 +270,7 @@ VkExtent2D VulkanSwapChain::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &cap
 
 std::pair<VkResult, std::optional<uint32_t>> VulkanSwapChain::AcquireNextImage(VkSemaphore imageAvailableSemaphore) {
     uint32_t imageIndex;
-    VkResult result = vkAcquireNextImageKHR(m_device, m_swapChain, UINT64_MAX,
+    VkResult result = vkAcquireNextImageKHR(Thryve::Rendering::VulkanContext::GetCurrentDevice()->GetLogicalDevice(), m_swapChain, UINT64_MAX,
                                             imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
