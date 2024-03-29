@@ -2,6 +2,7 @@
 // Created by kprie on 14.03.2024.
 //
 #pragma once
+
 #include "GLFW/glfw3.h"
 #include "ThreadPool.h"
 #include "Vertex2D.h"
@@ -16,7 +17,6 @@
 #include "VulkanSwapChain.h"
 #include "VulkanTextureImage.h"
 #include "VulkanVertexBuffer.h"
-#include "VulkanWindowContext.h"
 #include "glm/ext/matrix_transform.hpp"
 #include "pch.h"
 
@@ -24,16 +24,6 @@ constexpr uint32_t WIDTH = 1920;
 constexpr uint32_t HEIGHT = 1080;
 
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
-
-// const std::vector<const char *> DEVICE_EXTENSIONS = {
-//     VK_KHR_SWAPCHAIN_EXTENSION_NAME
-// };
-//
-// #ifdef NDEBUG
-// constexpr bool ENABLE_VALIDATION_LAYERS = false;
-// #else
-// constexpr bool ENABLE_VALIDATION_LAYERS = true;
-// #endif
 
 const std::vector<Vertex3D> VERTICES_3D = {
     {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f},{1.0f, 0.0f}},
@@ -115,7 +105,7 @@ namespace Thryve::Rendering
         std::vector<VkBuffer> m_uniformBuffers;
         std::vector<VkDeviceMemory> m_uniformBuffersMemory;
         std::vector<void*> m_uniformBuffersMapped;
-        std::unique_ptr<VulkanDescriptorManager> m_descriptorManager;
+        Core::UniqueRef<VulkanDescriptorManager> m_descriptorManager;
 
         // Synchronization
         std::unique_ptr<VulkanFrameSynchronizer> m_FrameSynchronizer;

@@ -11,7 +11,6 @@
 #include <iostream>
 
 #include "Config.h"
-#include "Core/Log.h"
 #include "Core/ServiceRegistry.h"
 #include "Vulkan/VulkanContext.h"
 #include "Vulkan/VulkanDescriptorManager.h"
@@ -35,7 +34,7 @@ namespace Thryve::Rendering {
     void VulkanRenderContext::CreateSwapChain() {
         int width, height = 0;
         glfwGetFramebufferSize(VulkanContext::GetWindow(), &width, &height);
-        m_swapChain->InitializeSwapChain(width, height);
+        m_swapChain->InitializeSwapChain();
     }
 
     void VulkanRenderContext::InitRenderPassFactory() {
@@ -96,26 +95,13 @@ namespace Thryve::Rendering {
             imageInfo.imageView = m_textureImageView;
             imageInfo.sampler = m_textureSampler;
 
-            std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
-            descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrites[0].dstSet = m_descriptorSets[i];
-            descriptorWrites[0].dstBinding = 0;
-            descriptorWrites[0].dstArrayElement = 0;
-            descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            descriptorWrites[0].descriptorCount = 1;
-            descriptorWrites[0].pBufferInfo = &bufferInfo;
-            descriptorWrites[0].pTexelBufferView = nullptr; // Optional
 
-            descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrites[1].dstSet = m_descriptorSets[i];
-            descriptorWrites[1].dstBinding = 1;
-            descriptorWrites[1].dstArrayElement = 0;
-            descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            descriptorWrites[1].descriptorCount = 1;
-            descriptorWrites[1].pImageInfo = &imageInfo; // Optional
-            descriptorWrites[1].pTexelBufferView = nullptr; // Optional
+            VkWriteDescriptorSet bufferWrite = m_descriptorManager->createBufferDescriptorWrite(m_descriptorSets[i], 0, &bufferInfo);
+            VkWriteDescriptorSet imageWrite = m_descriptorManager->createImageDescriptorWrite(m_descriptorSets[i], 1, &imageInfo);
 
-            vkUpdateDescriptorSets(VulkanContext::GetCurrentDevice()->GetLogicalDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+            std::array<VkWriteDescriptorSet, 2> descriptorWrites = {bufferWrite, imageWrite};
+
+            vkUpdateDescriptorSets(m_device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
     }
 
@@ -154,7 +140,7 @@ namespace Thryve::Rendering {
         m_swapChain->SetRenderPass(m_renderPass);
 
         m_descriptorPool = CreateDescriptorPool();
-        m_descriptorManager = std::make_unique<VulkanDescriptorManager>(m_descriptorPool);
+        m_descriptorManager = Core::UniqueRef<VulkanDescriptorManager>::Create(m_descriptorPool);
         CreateDescriptorSetLayout();
         CreateGraphicsPipeline();
         CreateCommandPool();
@@ -208,7 +194,7 @@ namespace Thryve::Rendering {
 
         m_swapChain->CleanupSwapChain();
 
-        m_swapChain->InitializeSwapChain(_width,_height);
+        m_swapChain->InitializeSwapChain();
         CreateDepthResources();
         CreateFramebuffers();
     }
@@ -279,10 +265,9 @@ namespace Thryve::Rendering {
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             constexpr VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-            auto _deviceSelector = VulkanContext::GetCurrentDevice();
-            VulkanBufferUtils::CreateBuffer({ _deviceSelector->GetLogicalDevice(), _deviceSelector->GetPhysicalDevice(), bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT}, m_uniformBuffers[i], m_uniformBuffersMemory[i]);
+            VulkanBufferUtils::CreateBuffer({ m_device, m_physicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT}, m_uniformBuffers[i], m_uniformBuffersMemory[i]);
 
-            VK_CALL(vkMapMemory(_deviceSelector->GetLogicalDevice(), m_uniformBuffersMemory[i], 0, bufferSize, 0, &m_uniformBuffersMapped[i]));
+            VK_CALL(vkMapMemory(m_device, m_uniformBuffersMemory[i], 0, bufferSize, 0, &m_uniformBuffersMapped[i]));
         }
     }
 
@@ -308,7 +293,7 @@ namespace Thryve::Rendering {
         std::array<VkClearValue, 2> _clearValues{};
         _clearValues[0].color = {{0.3f, 0.3f, 0.3f, 1.0f}};
         _clearValues[1].depthStencil = {1.f, 0};
-        
+
         renderPassInfo.clearValueCount = static_cast<uint32_t>(_clearValues.size());
         renderPassInfo.pClearValues = _clearValues.data();
 
@@ -387,7 +372,7 @@ namespace Thryve::Rendering {
 
                 UpdateUniformBuffer(currentFrame);
 
-                VK_CALL(vkResetFences(VulkanContext::GetCurrentDevice()->GetLogicalDevice(), 1, &_syncObjects.in_flight_fence));
+                VK_CALL(vkResetFences(m_device, 1, &_syncObjects.in_flight_fence));
 
                 VK_CALL(vkResetCommandBuffer(m_commandBuffer, /*VkCommandBufferResetFlagBits*/ 0));
                 RecordCommandBufferSegment(m_commandBuffer, _imageIndex);
