@@ -12,6 +12,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 # Define the path to the shaders directory relative to this CMakeLists.txt
 set(SHADERS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThryveRenderer/shaders")
 set(RESOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThryveRenderer/resources")
+set(PROFILE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Profiling")
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config/Config.h.in ${CMAKE_BINARY_DIR}/generated/Config.h)
 
