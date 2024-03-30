@@ -6,11 +6,20 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <unordered_map>
 #include <utility>
 
 #include "IService.h"
+#include "ServiceRegistry.h"
 
 namespace Thryve::Core {
+
+    struct ProfilingData {
+        std::string Name;
+        std::thread::id ThreadID;
+        std::time_t StartTime;
+        long long Duration;
+    };
 
     class ProfilingService : public IService {
     public:
@@ -18,36 +27,38 @@ namespace Thryve::Core {
         void Init(ServiceConfiguration *configuration) override;
         void ShutDown() override;
 
-        //TODO implement
+        void RecordProfileResult(const ProfilingData& data);
+
+        void SaveProfileResultsToJson(std::string& filePath);
+    private:
+        std::mutex m_mutex;
+        std::unordered_map<std::string, std::unordered_map<std::thread::id, std::vector<ProfilingData>>> m_Profiles;
     };
 
     class ScopeProfiler {
     public:
-        explicit ScopeProfiler(std::string functionName) :
-            m_scopeName{functionName}, m_functionName{std::move(functionName)},m_threadID{std::this_thread::get_id()}, m_start{std::chrono::high_resolution_clock::now()}
+        explicit ScopeProfiler(const std::string& functionName)
+        : m_Data{functionName, std::this_thread::get_id()}
+        , m_start{std::chrono::steady_clock::now()}
         {
         }
 
-        explicit ScopeProfiler(std::string serviceName, std::string functionName) :
-            m_scopeName{std::move(serviceName)}, m_functionName{std::move(functionName)},
-            m_threadID{std::this_thread::get_id()}, m_start{std::chrono::high_resolution_clock::now()}
+        explicit ScopeProfiler(std::string& serviceName, const std::string& functionName) :
+          m_Data{functionName, std::this_thread::get_id()}
+        , m_start{std::chrono::high_resolution_clock::now()}
         {
         }
 
         ~ScopeProfiler()
         {
-            const auto _end = std::chrono::high_resolution_clock::now();
-            auto _duration = std::chrono::duration_cast<std::chrono::microseconds>(_end - m_start).count();
-
-            // TODO Now we either send (async) it or print it out I guess?
-            std::cout << "Function: " << m_functionName << " Duration: " << _duration << " microseconds" << "\n";
+            const auto _end = std::chrono::steady_clock::now();
+            m_Data.Duration = std::chrono::duration_cast<std::chrono::microseconds>(_end - m_start).count();
+            ServiceRegistry::GetService<ProfilingService>()->RecordProfileResult(m_Data);
         }
 
     private:
-        std::string m_scopeName;
-        std::string m_functionName;
-        std::thread::id m_threadID;
-        std::chrono::high_resolution_clock::time_point m_start;
+        ProfilingData m_Data;
+        std::chrono::steady_clock::time_point m_start;
     };
 } // namespace Thryve::Core
 

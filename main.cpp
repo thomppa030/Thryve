@@ -19,8 +19,12 @@ int main() {
     auto _validationLoggerService = Thryve::Core::SharedRef<Thryve::Core::ValidationLayerLogger>::Create("Validation");
     _validationLoggerService->Init(&_valLogConfig);
 
+    auto _profilingService = Thryve::Core::SharedRef<Thryve::Core::ProfilingService>::Create();
+    _profilingService->Init(nullptr);
+
     Thryve::Core::ServiceRegistry::RegisterService(_loggingService);
     Thryve::Core::ServiceRegistry::RegisterService(_validationLoggerService);
+    Thryve::Core::ServiceRegistry::RegisterService(_profilingService);
 
     auto* _coreApp = new Thryve::Core::App();
 
