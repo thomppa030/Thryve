@@ -20,8 +20,11 @@ include_directories(${CMAKE_BINARY_DIR}/generated)
 
 add_subdirectory(external/glfw)
 add_subdirectory(external/spdlog)
+add_subdirectory(external/json)
+
 include_directories(external/spdlog/include)
 include_directories(external/glfw/include)
+include_directories(external/json/include)
 
 add_subdirectory(ThryveRenderer)
 
@@ -54,5 +57,5 @@ add_executable(Thryve main.cpp
         IRenderContext.h
         ThryveRenderer/src/pch.cpp)
 
-target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} ThryveRenderer glfw glm::glm spdlog::spdlog imgui)
+target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} ThryveRenderer glfw glm::glm spdlog::spdlog imgui nlohmann_json::nlohmann_json)
 
