@@ -6,6 +6,7 @@
 
 #include <Config.h>
 #include <fstream>
+#include <future>
 #include <nlohmann/json.hpp>
 
 Thryve::Core::ProfilingService::~ProfilingService()
@@ -18,9 +19,36 @@ void Thryve::Core::ProfilingService::Init(ServiceConfiguration *configuration)
     IService::Init(configuration);
 }
 
+std::string GetNextFileName(const std::string& baseFileName)
+{
+    static int fileIndex = 0;
+
+    std::ifstream indexFile("index.txt");
+    if (indexFile.is_open())
+    {
+        indexFile >> fileIndex;
+        indexFile.close();
+    }
+
+    fileIndex++;
+
+    std::ofstream outFile("index.txt");
+    {
+        if (outFile.is_open())
+        {
+            outFile << fileIndex;
+            outFile.close();
+        }
+    }
+
+    std::ostringstream fileName;
+    fileName << baseFileName << "_" << std::setw(4) << std::setfill('0') << fileIndex << ".json";
+    return fileName.str();
+}
+
 void Thryve::Core::ProfilingService::ShutDown()
 {
-    auto _filePath = std::string(RESOURCE_DIR)+"/profile_Data.json";
+    auto _filePath = GetNextFileName(std::string(PROFILE_DIR)+"/profile_Data");
     SaveProfileResultsToJson(_filePath);
 }
 
