@@ -45,7 +45,7 @@ namespace Thryve::Core {
 
         explicit ScopeProfiler(std::string& serviceName, const std::string& functionName) :
           m_Data{functionName, std::this_thread::get_id()}
-        , m_start{std::chrono::high_resolution_clock::now()}
+        , m_start{std::chrono::steady_clock::now()}
         {
         }
 
