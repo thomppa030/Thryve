@@ -86,28 +86,8 @@ inline std::string vkResultToString(VkResult result)
         return "VK_OPERATION_NOT_DEFERRED_KHR";
     case VK_PIPELINE_COMPILE_REQUIRED_EXT:
         return "VK_PIPELINE_COMPILE_REQUIRED_EXT";
-    case VK_ERROR_IMAGE_USAGE_NOT_SUPPORTED_KHR:
-        break;
-    case VK_ERROR_VIDEO_PICTURE_LAYOUT_NOT_SUPPORTED_KHR:
-        break;
-    case VK_ERROR_VIDEO_PROFILE_OPERATION_NOT_SUPPORTED_KHR:
-        break;
-    case VK_ERROR_VIDEO_PROFILE_FORMAT_NOT_SUPPORTED_KHR:
-        break;
-    case VK_ERROR_VIDEO_PROFILE_CODEC_NOT_SUPPORTED_KHR:
-        break;
-    case VK_ERROR_VIDEO_STD_VERSION_NOT_SUPPORTED_KHR:
-        break;
-    case VK_ERROR_INVALID_VIDEO_STD_PARAMETERS_KHR:
-        break;
-    case VK_ERROR_COMPRESSION_EXHAUSTED_EXT:
-        break;
-    case VK_ERROR_INCOMPATIBLE_SHADER_BINARY_EXT:
-        break;
-    case VK_RESULT_MAX_ENUM:
-        break;
-        default:
-           return  "Result not Implemented, yet!";
+    default:
+        return "Result not Implemented, yet!";
     }
 }
 
