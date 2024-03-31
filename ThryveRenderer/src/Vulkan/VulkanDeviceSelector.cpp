@@ -7,6 +7,7 @@
 #include <set>
 #include <stdexcept>
 
+#include "Core/App.h"
 #include "utils/VkDebugUtils.h"
 
 VulkanDeviceSelector::VulkanDeviceSelector(const VkInstance instance
@@ -82,7 +83,23 @@ VkQueue VulkanDeviceSelector::GetGraphicsQueue() const {
 
 VkQueue VulkanDeviceSelector::GetPresentQueue() const { return m_presentQueue; }
 
-void VulkanDeviceSelector::PickSuitableDevice(const std::vector<const char *> deviceExtensions
+std::string VulkanDeviceSelector::GetGraphicsCardType(VkPhysicalDeviceProperties props)
+{
+    switch (props.deviceType)
+    {
+    case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
+        return"Integrated";
+    case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+        return"Discrete";
+    case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
+        return"Virtual";
+    case VK_PHYSICAL_DEVICE_TYPE_CPU:
+        return  "CPU";
+    default:
+        return"Other";
+    }
+}
+void VulkanDeviceSelector::PickSuitableDevice(const std::vector<const char *> &deviceExtensions
                                               , bool enableValidationLayers) {
         uint32_t deviceCount = 0;
         VK_CALL(vkEnumeratePhysicalDevices(m_instance, &deviceCount, nullptr));
@@ -105,30 +122,37 @@ void VulkanDeviceSelector::PickSuitableDevice(const std::vector<const char *> de
             throw std::runtime_error("failed to find a suitable GPU!");
         }
 
+        VkPhysicalDeviceProperties _props;
+        vkGetPhysicalDeviceProperties(m_physicalDevice, &_props);
+        Thryve::Core::App::SetGraphicsCardName(_props.deviceName);
+
+        const std::string _graphicsCardTypeAsString = GetGraphicsCardType(_props);
+        Thryve::Core::App::SetGraphicsCardType(_graphicsCardTypeAsString);
+
         CreateLogicalDevice(m_physicalDevice, deviceExtensions, enableValidationLayers);
 }
 
 SwapChainSupportDetails VulkanDeviceSelector::QuerySwapChainSupport(const VkPhysicalDevice device) const {
-    SwapChainSupportDetails details;
+    SwapChainSupportDetails _details;
 
-    VK_CALL(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_surface, &details.Capabilities));
+    VK_CALL(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_surface, &_details.Capabilities));
 
     uint32_t formatCount;
     VK_CALL(vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_surface, &formatCount, nullptr));
 
     if (formatCount != 0) {
-        details.Formats.resize(formatCount);
-        VK_CALL(vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_surface, &formatCount, details.Formats.data()));
+        _details.Formats.resize(formatCount);
+        VK_CALL(vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_surface, &formatCount, _details.Formats.data()));
     }
 
     uint32_t presentModeCount;
     VK_CALL(vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_surface, &presentModeCount, nullptr));
 
     if (presentModeCount != 0) {
-        details.PresentModes.resize(presentModeCount);
-        VK_CALL(vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_surface, &presentModeCount, details.PresentModes.data()));
+        _details.PresentModes.resize(presentModeCount);
+        VK_CALL(vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_surface, &presentModeCount, _details.PresentModes.data()));
     }
-    return details;
+    return _details;
 }
 
 bool VulkanDeviceSelector::

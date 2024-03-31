@@ -47,7 +47,9 @@ public:
     [[nodiscard]] VkQueue GetGraphicsQueue() const;
     [[nodiscard]] VkQueue GetPresentQueue() const;
 
-    void PickSuitableDevice(std::vector<const char*> deviceExtensions, bool enableValidationLayers);
+    std::string GetGraphicsCardType(VkPhysicalDeviceProperties props);
+
+    void PickSuitableDevice(const std::vector<const char *> &deviceExtensions, bool enableValidationLayers);
 
     //TODO Parameter not necessary
     QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device) const;
