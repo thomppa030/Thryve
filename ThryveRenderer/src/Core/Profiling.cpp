@@ -86,9 +86,6 @@ void Thryve::Core::ProfilingService::SaveProfileResultsToJson(std::string &fileP
         }
     }
 
-    //TODO write a SystemSpecs Static Class that holds this kind of Information, no need to couple to Vulkan here for the GPU!
-
-
     nlohmann::json _systemInfo;
 
     AppSpecification _specs = App::GetAppSpecification();
@@ -99,7 +96,7 @@ void Thryve::Core::ProfilingService::SaveProfileResultsToJson(std::string &fileP
                            {"CPU", _specs.CPU},
                            {"Core Count", _specs.CPUCoreCount},
                            {"RAM", _specs.RAM}
-                  });
+    });
 
     _json["System"] = _systemInfo;
 
