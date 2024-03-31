@@ -9,7 +9,7 @@
 .idea/**/shelf
 
 .PVS-Studio/**
-
+Profiling/**
 # AWS User-specific
 .idea/**/aws.xml
 
