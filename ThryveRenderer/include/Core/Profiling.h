@@ -7,8 +7,6 @@
 #include <string>
 #include <thread>
 #include <unordered_map>
-#include <utility>
-
 #include "IService.h"
 #include "ServiceRegistry.h"
 
@@ -16,6 +14,7 @@ namespace Thryve::Core {
 
     struct ProfilingData {
         std::string Name;
+        std::string ScopeName;
         std::thread::id ThreadID;
         std::time_t StartTime;
         long long Duration;
@@ -38,14 +37,14 @@ namespace Thryve::Core {
     class ScopeProfiler {
     public:
         explicit ScopeProfiler(const std::string& functionName)
-        : m_Data{functionName, std::this_thread::get_id()}
+        : m_Data{functionName, "",std::this_thread::get_id()}
         , m_start{std::chrono::steady_clock::now()}
         {
         }
 
-        explicit ScopeProfiler(std::string& serviceName, const std::string& functionName) :
-          m_Data{functionName, std::this_thread::get_id()}
-        , m_start{std::chrono::high_resolution_clock::now()}
+        explicit ScopeProfiler(const std::string& scopeName, const std::string& functionName) :
+          m_Data{functionName,scopeName, std::this_thread::get_id()}
+        , m_start{std::chrono::steady_clock::now()}
         {
         }
 
