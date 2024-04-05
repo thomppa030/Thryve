@@ -13,18 +13,14 @@ int main() {
     Thryve::Core::ValidationLayerLoggerConfiguration _valLogConfig = {};
     _valLogConfig.ConsoleOutputEnabled = true;
 
-    auto _loggingService = Thryve::Core::SharedRef<Thryve::Core::DevelopmentLogger>::Create("Core");
+    auto _loggingService = Thryve::Core::ServiceRegistry::RegisterService<Thryve::Core::DevelopmentLogger>("Debug");
     _loggingService->Init(&_devLogConfig);
 
-    auto _validationLoggerService = Thryve::Core::SharedRef<Thryve::Core::ValidationLayerLogger>::Create("Validation");
+    auto _validationLoggerService = Thryve::Core::ServiceRegistry::RegisterService<Thryve::Core::ValidationLayerLogger>("Validation");
     _validationLoggerService->Init(&_valLogConfig);
 
-    auto _profilingService = Thryve::Core::SharedRef<Thryve::Core::ProfilingService>::Create();
+    auto _profilingService = Thryve::Core::ServiceRegistry::RegisterService<Thryve::Core::ProfilingService>();
     _profilingService->Init(nullptr);
-
-    Thryve::Core::ServiceRegistry::RegisterService(_loggingService);
-    Thryve::Core::ServiceRegistry::RegisterService(_validationLoggerService);
-    Thryve::Core::ServiceRegistry::RegisterService(_profilingService);
 
     auto* _coreApp = new Thryve::Core::App();
 
