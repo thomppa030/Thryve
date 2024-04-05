@@ -10,25 +10,76 @@ file1 = st.file_uploader("Drag and drop or click to upload the first JSON file",
 file2 = st.file_uploader("Drag and drop or click to upload the second JSON file", type=['json'], key="file2")
 
 
+def calculate_fps_from_dataframe(df, function_name='DrawFrame'):
+    """
+    Calculates the average FPS for a specified function within a DataFrame.
+
+    Args:
+    - df: DataFrame containing profiling data, with 'Function' and 'Duration' columns.
+    - function_name: The name of the function to calculate FPS for.
+
+    Returns:
+    - The average FPS for the specified function.
+    """
+    # Filter the DataFrame for the specified function
+    function_df = df[df['Function'] == function_name]
+
+    # Calculate the average duration in milliseconds
+    avg_duration_ms = function_df['Duration'].mean() / 1000
+
+    # Convert to seconds and calculate FPS
+    if avg_duration_ms == 0:
+        return float('inf')  # To avoid division by zero
+    fps = 1000 / avg_duration_ms
+
+    return fps
+
+
+def compare_fps(df1, df2, function_name='DrawFrame'):
+    """
+    Compares the FPS of a specified function between two DataFrames.
+
+    Args:
+    - df1, df2: DataFrames containing profiling data.
+    - function_name: The function name to calculate and compare FPS.
+
+    Returns:
+    - A dictionary with the FPS for each DataFrame and which had better FPS.
+    """
+    fps1 = calculate_fps_from_dataframe(df1, function_name)
+    fps2 = calculate_fps_from_dataframe(df2, function_name)
+
+    # Determine which DataFrame had better FPS
+    better = "equal"
+    if fps1 > fps2:
+        better = "df1"
+    elif fps2 > fps1:
+        better = "df2"
+
+    return {
+        "FPS1": fps1,
+        "FPS2": fps2,
+        "Better Performance": better
+    }
+
 def json_to_dataframe(file):
     # Load JSON content
     data = json.load(file)
 
     # Prepare data for DataFrame
     flattened_data = []
-    for function_name, function_data in data.items():
-        # Skip processing for keys that don't have a dictionary value or don't contain "invocations"
-        if not isinstance(function_data, dict) or not all(
-                isinstance(function_data[key], dict) and "invocations" in function_data[key] for key in function_data):
+    for function_name, scopes in data.items():
+        if function_name == "System":  # Skip the System info
             continue
-
-        for instance_id, details in function_data.items():
-            for invocation in details.get("invocations", []):
-                flattened_data.append({
-                    "Function": function_name,
-                    "InstanceID": instance_id,
-                    "Duration": invocation["duration"]
-                })
+        for scope_name, instances in scopes.items():
+            for instance_id, details in instances.items():
+                for invocation in details.get("invocations", []):
+                    flattened_data.append({
+                        "Function": function_name,
+                        "Scope": scope_name,
+                        "InstanceID": instance_id,
+                        "Duration": invocation["duration"]
+                    })
 
     # Create DataFrame
     df = pd.DataFrame(flattened_data)
@@ -78,6 +129,10 @@ def plot_comparison_bar_chart(comparison_results):
 if file1 and file2:
     df1 = json_to_dataframe(file1)
     df2 = json_to_dataframe(file2)
+
+    better_fps = compare_fps(df1, df2)
+
+    st.write(better_fps)
 
     comparison_results = compare_dataframes(df1, df2)
 
