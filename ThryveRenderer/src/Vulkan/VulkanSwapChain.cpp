@@ -157,9 +157,10 @@ void VulkanSwapChain::CreateSwapChain() {
 
         //TODO Update Dimensions here?
 
+        uint32_t imageCount = swapChainSupport.Capabilities.minImageCount + 10;
 
-        uint32_t imageCount = swapChainSupport.Capabilities.minImageCount + 1;
-        if (swapChainSupport.Capabilities.maxImageCount > 0 && imageCount > swapChainSupport.Capabilities.maxImageCount) {
+        if (swapChainSupport.Capabilities.maxImageCount > 0 && imageCount > swapChainSupport.Capabilities.maxImageCount)
+        {
             imageCount = swapChainSupport.Capabilities.maxImageCount;
         }
 
@@ -189,14 +190,19 @@ void VulkanSwapChain::CreateSwapChain() {
         createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         createInfo.presentMode = presentMode;
         createInfo.clipped = VK_TRUE;
+        createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-        if (vkCreateSwapchainKHR(_device, &createInfo, nullptr, &m_swapChain) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create swap chain!");
+        {
+            PROFILE_SCOPE("SwapchainCreation")
+            VK_CALL(vkCreateSwapchainKHR(_device, &createInfo, nullptr, &m_swapChain));
         }
 
-        vkGetSwapchainImagesKHR(_device, m_swapChain, &imageCount, nullptr);
-        m_swapChainImages.resize(imageCount);
-        vkGetSwapchainImagesKHR(_device, m_swapChain, &imageCount, m_swapChainImages.data());
+        {
+            PROFILE_SCOPE("SwapchainImageResizing")
+            vkGetSwapchainImagesKHR(_device, m_swapChain, &imageCount, nullptr);
+            m_swapChainImages.resize(imageCount);
+            vkGetSwapchainImagesKHR(_device, m_swapChain, &imageCount, m_swapChainImages.data());
+        }
 
         m_swapChainImageFormat = surfaceFormat.format;
         m_swapChainExtent = extent;
@@ -227,7 +233,7 @@ void VulkanSwapChain::CreateImageViews() {
 }
 
 VkSurfaceFormatKHR VulkanSwapChain::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats) {
-
+        PROFILE_FUNCTION()
         for (const auto& availableFormat : availableFormats) {
             if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
                 return availableFormat;
@@ -238,7 +244,7 @@ VkSurfaceFormatKHR VulkanSwapChain::ChooseSwapSurfaceFormat(const std::vector<Vk
 }
 
 VkPresentModeKHR VulkanSwapChain::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes) {
-
+        PROFILE_FUNCTION()
         for (const auto& availablePresentMode : availablePresentModes) {
             if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
                 return availablePresentMode;
@@ -250,6 +256,7 @@ VkPresentModeKHR VulkanSwapChain::ChooseSwapPresentMode(const std::vector<VkPres
 }
 
 VkExtent2D VulkanSwapChain::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities) {
+        PROFILE_FUNCTION()
         if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
             return capabilities.currentExtent;
         } else {
