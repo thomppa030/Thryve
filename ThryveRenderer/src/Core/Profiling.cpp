@@ -58,7 +58,7 @@ void Thryve::Core::ProfilingService::ShutDown()
 void Thryve::Core::ProfilingService::RecordProfileResult(const ProfilingData &data)
 {
     std::lock_guard _lock(m_mutex);
-    m_Profiles[data.Name][data.ThreadID].push_back(data);
+    m_Profiles[ProfileKey{data.Name, data.ScopeName}][data.ThreadID].push_back(data);
 }
 
 void Thryve::Core::ProfilingService::SaveProfileResultsToJson(std::string &filePath)
@@ -82,7 +82,7 @@ void Thryve::Core::ProfilingService::SaveProfileResultsToJson(std::string &fileP
                 });
             }
 
-            _json[functionName][_threadIdString]["invocations"] = _threadJson;
+            _json[functionName.Name][functionName.ScopeName][_threadIdString]["invocations"] = _threadJson;
         }
     }
 
