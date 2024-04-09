@@ -18,18 +18,20 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config/Config.h.in ${CMAKE_BINARY_DIR
 
 include_directories(${CMAKE_BINARY_DIR}/generated)
 
-
 add_subdirectory(external/glfw)
 add_subdirectory(external/spdlog)
 add_subdirectory(external/json)
+add_subdirectory(external/enkiTS)
 
 include_directories(external/spdlog/include)
 include_directories(external/glfw/include)
 include_directories(external/json/include)
+include_directories(external/enkiTS/src)
+
 
 add_subdirectory(ThryveRenderer)
 
-include_directories(Vulkan PUBLIC ${Vulkan_INCLUDE_DIRS})
+include_directories(Vulkan PUBLIC ${Vulkan_INCLUDE_DIR})
 
 # Define ImGui as a library target
 add_library(imgui STATIC
@@ -58,5 +60,5 @@ add_executable(Thryve main.cpp
         IRenderContext.h
         ThryveRenderer/src/pch.cpp)
 
-target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} ThryveRenderer glfw glm::glm spdlog::spdlog imgui nlohmann_json::nlohmann_json)
+target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} ThryveRenderer glfw glm::glm spdlog::spdlog imgui nlohmann_json::nlohmann_json enkiTS)
 
