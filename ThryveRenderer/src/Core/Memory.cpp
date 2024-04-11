@@ -158,15 +158,6 @@ namespace Thryve::Core::Memory {
     MemoryService::~MemoryService() = default;
     void MemoryService::Init(ServiceConfiguration *configuration) { IService::Init(configuration); }
     void MemoryService::ShutDown() { IService::ShutDown(); }
-
-    IAllocator *MemoryService::GetAllocator(AllocatorType type)
-    {
-        if (const auto _it = allocators.find(type); _it != allocators.end())
-            return _it->second.Get();
-
-        return nullptr;
-    }
-
 #pragma endregion
 
 

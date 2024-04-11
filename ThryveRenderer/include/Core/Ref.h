@@ -240,6 +240,21 @@ namespace Thryve::Core {
             return m_Instance ? m_Instance->GetWeakCountAddress() : nullptr;
         }
 
+        // Static cast for SharedRef, useful for downcasting with compile-time type checking
+        template<typename OtherType>
+        SharedRef<OtherType> StaticCast() const {
+            return SharedRef<OtherType>(static_cast<OtherType*>(m_Instance));
+        }
+
+        // Dynamic cast for SharedRef, useful for safe runtime-checked downcasting
+        template<typename OtherType>
+        SharedRef<OtherType> DynamicCast() const {
+            if (auto *_castedInstance = dynamic_cast<OtherType *>(m_Instance)) {
+                return SharedRef<OtherType>(_castedInstance);
+            }
+            return nullptr;
+        }
+
     private:
         void IncrementReferenceCount() const {
             if (m_Instance)

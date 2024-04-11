@@ -122,16 +122,29 @@ namespace Thryve::Core::Memory {
         void Init(ServiceConfiguration* configuration) override;
         void ShutDown() override;
 
-        IAllocator* GetAllocator(AllocatorType type);
+        template<typename AllocatorT>
+        UniqueRef<AllocatorT> GetAllocator() {
+            auto type = std::type_index(typeid(AllocatorT));
+            auto it = allocators.find(type);
+            if (it != allocators.end()) {
+                return static_cast<UniqueRef<AllocatorT>>(it->second.Get());
+            }
+            // Optionally, automatically register a default instance of the allocator
+            // if not found. Or return nullptr or throw an exception based on your error handling strategy.
+            return nullptr;
+        }
 
-        // template<typename AllocatorT, typename ...Args>
-        // void RegisterAllocator(const AllocatorType type, Args&... args)
-        // {
-        //     allocators[type] = UniqueRef<AllocatorT>::Create(args);
-        // }
-
+        template<typename AllocatorT, typename... Args>
+        UniqueRef<AllocatorT> RegisterAllocator(Args&&... args) {
+            std::type_index _typeIndex(typeid(AllocatorT));
+            auto _it = allocators.find(_typeIndex);
+            if (_it == allocators.end()) {
+                allocators[_typeIndex] = std::make_unique<AllocatorT>(std::forward<Args>(args)...);
+            }
+            return static_cast<UniqueRef<AllocatorT>>(allocators[_typeIndex].Get());
+        }
     private:
-        std::map <AllocatorType, UniqueRef<IAllocator>> allocators;
+        std::map <std::type_index, UniqueRef<IAllocator>> allocators;
     };
 }
 
