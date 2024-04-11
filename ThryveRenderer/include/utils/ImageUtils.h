@@ -53,7 +53,7 @@ namespace ImageUtils {
         vkBindImageMemory(_device, image, imageMemory, 0);
     }
 
-    static void CreateImageView(VkImage image, VkImageView& imageView, VkFormat imageFormat, VkImageAspectFlags aspectFlags)
+    static VkImageView CreateImageView(VkImage image, VkFormat imageFormat, VkImageAspectFlags aspectFlags)
     {
         VkImageViewCreateInfo viewInfo{};
         viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -68,7 +68,10 @@ namespace ImageUtils {
 
         VkDevice _device = Thryve::Rendering::VulkanContext::GetCurrentDevice()->GetLogicalDevice();
 
+        VkImageView imageView;
         VK_CALL(vkCreateImageView(_device, &viewInfo, nullptr, &imageView));
+
+        return imageView;
     }
     
     static void transitionImageLayout(const VkDevice device, const VkCommandPool commandPool, VkQueue transferQueue,
