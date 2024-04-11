@@ -14,8 +14,6 @@ public:
 
     bool HandlePresentResult(VkResult result);
 
-    void SetDepthImageView(VkImageView depthimageView) { m_DepthImageView = depthimageView; };
-
     VulkanSwapChain(const VulkanSwapChain&) = delete; // Disable copy operations
     VulkanSwapChain& operator=(const VulkanSwapChain&) = delete;
 
@@ -44,6 +42,8 @@ public:
     VkResult PresentImage(uint32_t imageIndex, VkSemaphore renderFinishedSemaphore) const;
     
     void CreateSwapChain();
+    // Depth Functions
+    void CreateDepthResources();
     void CreateImageViews(); // Helper method to create image views for the swap chain images
 
 private:
@@ -54,8 +54,6 @@ private:
 
     VkSwapchainKHR m_swapChain;
     std::vector<VkImage> m_swapChainImages;
-
-    VkImageView m_DepthImageView;
 
     VkFormat m_swapChainImageFormat;
     VkExtent2D m_swapChainExtent;
@@ -69,5 +67,10 @@ private:
     VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
     VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
     VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+
+    VkImage m_DepthImage;
+    VkDeviceMemory m_DepthImageMemory;
+    VkImageView m_DepthImageView;
+
 
 };

@@ -67,12 +67,6 @@ namespace Thryve::Rendering
         VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
         VkDevice m_device;
 
-        VkImage depthImage;
-        VkDeviceMemory dethImageMemory;
-        VkImageView depthimageView;
-
-        // Depth Functions
-        void CreateDepthResources();
 
         std::vector<Vertex3D> ModelVertices;
         std::vector<uint32_t> ModelIndices;
@@ -140,7 +134,6 @@ namespace Thryve::Rendering
         void RecordCommandBufferSegment(VkCommandBuffer commandBuffer, uint32_t imageIndex) const;
         // Main loop and frame drawing
         void MainLoop();
-        void RecreateSwapChain();
         void DrawFrame();
         void UpdateUniformBuffer(uint32_t currentImage) const;
         // Synchronization methods

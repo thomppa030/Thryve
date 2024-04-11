@@ -46,7 +46,6 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::CreateFramebuffers() {
-        m_swapChain->SetDepthImageView(depthimageView);
         m_swapChain->CreateFramebuffers(m_device);
     }
 
@@ -148,7 +147,7 @@ namespace Thryve::Rendering {
         CreateDescriptorSetLayout();
         CreateGraphicsPipeline();
         CreateCommandPool();
-        CreateDepthResources();
+        m_swapChain->CreateDepthResources();
         CreateFramebuffers();
         auto _imagePath = std::string(RESOURCE_DIR) + "/viking_room.png";
         CreateTextureImage(_imagePath);
@@ -182,31 +181,10 @@ namespace Thryve::Rendering {
 
         VK_CALL(vkDeviceWaitIdle(m_device));
     }
-    void VulkanRenderContext::RecreateSwapChain()
-    {
-        PROFILE_FUNCTION()
-        int _width = 0, _height = 0;
-        glfwGetFramebufferSize(VulkanContext::GetWindow(), &_width, &_height);
-        while (_width == 0 || _height == 0) {
-            glfwGetFramebufferSize(VulkanContext::GetWindow(), &_width, &_height);
-            glfwWaitEvents();
-        }
-
-        vkDeviceWaitIdle(m_device);
-
-        vkDestroyImageView(m_device, depthimageView, nullptr);
-        vkDestroyImage(m_device, depthImage, nullptr);
-        vkFreeMemory(m_device, dethImageMemory, nullptr);
-
-        m_swapChain->CleanupSwapChain();
-
-        m_swapChain->InitializeSwapChain();
-        CreateDepthResources();
-        CreateFramebuffers();
-    }
 
     void VulkanRenderContext::Cleanup() {
         PROFILE_FUNCTION();
+        m_swapChain.reset();
         m_FrameSynchronizer.reset();
         m_cmdBuffer->Free(m_commandBuffer);
         m_cmdBuffer.reset();
@@ -215,10 +193,6 @@ namespace Thryve::Rendering {
         m_cmdPoolManager.reset();
         m_pipeline.reset();
         m_renderPassFactory.reset();
-        m_swapChain.reset();
-        vkDestroyImageView(m_device, depthimageView, nullptr);
-        vkDestroyImage(m_device, depthImage, nullptr);
-        vkFreeMemory(m_device, dethImageMemory, nullptr);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
              vkDestroyBuffer(m_device, m_uniformBuffers[i], nullptr);
@@ -378,7 +352,7 @@ namespace Thryve::Rendering {
                 const uint32_t _imageIndex = optionalImageIndex.value();
 
                 if (!m_swapChain->HandleAcquireResult(result)) {
-                    RecreateSwapChain();
+                    m_swapChain->RecreateSwapChain();
                 }
 
                 UpdateUniformBuffer(currentFrame);
@@ -394,7 +368,7 @@ namespace Thryve::Rendering {
 
                 result = m_swapChain->PresentImage(_imageIndex, _syncObjects.render_finished_semaphore);
                 if (m_swapChain->HandlePresentResult(result)) {
-                    RecreateSwapChain();
+                    m_swapChain->RecreateSwapChain();
                 }
 
                 currentFrame = m_FrameSynchronizer->AdvanceFrame(currentFrame);
@@ -408,18 +382,7 @@ namespace Thryve::Rendering {
         MainLoop();
         Cleanup();
     }
-    void VulkanRenderContext::CreateDepthResources()
-    {
-        PROFILE_FUNCTION()
-        VkFormat _depthFormat = ImageUtils::FindDepthFormat();
-        ImageUtils::CreateImage(m_swapChain->GetSwapchainExtent().width, m_swapChain->GetSwapchainExtent().height,
-                                _depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-                                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, dethImageMemory);
-        ImageUtils::CreateImageView(depthImage, depthimageView, _depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
-        ImageUtils::transitionImageLayout(
-            m_device, m_commandPool, VulkanContext::GetCurrentDevice()->GetGraphicsQueue(), depthImage, _depthFormat,
-            VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-    }
+
     void VulkanRenderContext::LoadModel(const std::string& path)
     {
         PROFILE_FUNCTION()

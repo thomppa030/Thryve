@@ -9,6 +9,7 @@
 #include "GLFW/glfw3.h"
 #include "Vulkan/VulkanContext.h"
 #include "Vulkan/VulkanDeviceSelector.h"
+#include "utils/ImageUtils.h"
 
 VulkanSwapChain::VulkanSwapChain() :  m_renderPass(nullptr), m_swapChain(nullptr), m_swapChainImageFormat(),
     m_swapChainExtent() {
@@ -88,11 +89,16 @@ void VulkanSwapChain::InitializeSwapChain() {
 
 void VulkanSwapChain::CleanupSwapChain() const {
     VkDevice _device = Thryve::Rendering::VulkanContext::GetCurrentDevice()->GetLogicalDevice();
-    for (const auto framebuffer: m_Framebuffers) {
+
+    vkDestroyImageView(_device,m_DepthImageView, nullptr);
+    vkDestroyImage(_device, m_DepthImage, nullptr);
+    vkFreeMemory(_device, m_DepthImageMemory, nullptr);
+
+    for (auto framebuffer: m_Framebuffers) {
         vkDestroyFramebuffer(_device, framebuffer, nullptr);
     }
 
-    for (const auto imageView: m_swapChainImageViews) {
+    for (auto imageView: m_swapChainImageViews) {
         vkDestroyImageView(_device, imageView, nullptr);
     }
 
@@ -138,6 +144,7 @@ void VulkanSwapChain::RecreateSwapChain() {
 
         CleanupSwapChain();
         InitializeSwapChain();
+        CreateDepthResources();
         CreateFramebuffers(_device);
 }
 
@@ -324,3 +331,19 @@ VkResult VulkanSwapChain::PresentImage(uint32_t imageIndex, VkSemaphore renderFi
 
     return vkQueuePresentKHR(m_deviceSelector->GetPresentQueue(), &presentInfo);
 }
+
+void VulkanSwapChain::CreateDepthResources() {
+    PROFILE_FUNCTION()
+    VkDevice _device = m_deviceSelector->GetLogicalDevice();
+
+    VkFormat _depthFormat = ImageUtils::FindDepthFormat();
+
+    ImageUtils::CreateImage(GetSwapchainExtent().width, GetSwapchainExtent().height,
+                            _depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_DepthImage, m_DepthImageMemory);
+    m_DepthImageView = ImageUtils::CreateImageView(m_DepthImage, _depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+//    ImageUtils::transitionImageLayout(
+//        _device, m_commandPool, m_deviceSelector->GetGraphicsQueue(), m_DepthImage, _depthFormat,
+//        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+}
+
