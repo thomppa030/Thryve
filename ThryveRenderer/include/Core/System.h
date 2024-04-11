@@ -8,14 +8,20 @@
 namespace SystemSpecs {
     std::string GetOSName() { return "Windows"; }
 
-    DWORDLONG GetTotalRAM()
-    {
+    std::string GetTotalRAM() {
         MEMORYSTATUSEX memInfo;
         memInfo.dwLength = sizeof(MEMORYSTATUSEX);
         GlobalMemoryStatusEx(&memInfo);
-        DWORDLONG totalRAM = memInfo.ullTotalPhys / (1024 * 1024); // Convert to MB
+        DWORDLONG totalRAMBytes = memInfo.ullTotalPhys;
 
-        return totalRAM;
+        // Convert to gigabytes for easier reading
+        double totalRAMGB = static_cast<double>(totalRAMBytes) / (1024 * 1024 * 1024);
+
+        // Format the string with one decimal place
+        char buffer[50];
+        sprintf(buffer, "%.1f GB", totalRAMGB);
+
+        return std::string(buffer);
     }
 
     std::string GetCPUName()

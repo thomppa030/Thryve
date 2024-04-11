@@ -200,12 +200,10 @@ void VulkanSwapChain::CreateSwapChain() {
         createInfo.oldSwapchain = VK_NULL_HANDLE;
 
         {
-            PROFILE_SCOPE("SwapchainCreation")
             VK_CALL(vkCreateSwapchainKHR(_device, &createInfo, nullptr, &m_swapChain));
         }
 
         {
-            PROFILE_SCOPE("SwapchainImageResizing")
             vkGetSwapchainImagesKHR(_device, m_swapChain, &imageCount, nullptr);
             m_swapChainImages.resize(imageCount);
             vkGetSwapchainImagesKHR(_device, m_swapChain, &imageCount, m_swapChainImages.data());
