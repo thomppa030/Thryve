@@ -3,9 +3,13 @@
 //
 #pragma once
 
+#include "LayerStack.h"
 #include "Ref.h"
 #include "Renderer/RenderContext.h"
 
+namespace Thryve::UI {
+    class ImGuiLayer;
+}
 struct AppSpecification {
     std::string OSName;
     std::string CPU;
@@ -28,6 +32,9 @@ namespace Thryve::Core {
         static void SetGraphicsCardName(const std::string& GPUName) {s_AppSpecification.GPU = GPUName;}
         static void SetGraphicsCardType(const std::string& GPUType) {s_AppSpecification.GPUType = GPUType;}
 
+        void PushLayer(Layer* layer);
+        void PushOverlay(Layer* overlay);
+
         [[nodiscard]] Core::SharedRef<Rendering::RenderContext> GetRenderContext() const { return m_renderContext; };
 
         void Run();
@@ -37,6 +44,9 @@ namespace Thryve::Core {
         static AppSpecification s_AppSpecification;
 
         void PopulateAppSpecs();
+
+        UI::ImGuiLayer* m_imGuiLayer;
+        LayerStack m_layerStack;
 
         SharedRef<Rendering::RenderContext> m_renderContext{nullptr};
     };
