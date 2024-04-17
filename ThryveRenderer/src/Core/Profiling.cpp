@@ -61,24 +61,6 @@ void Thryve::Core::ProfilingService::RecordProfileResult(const ProfilingData &da
     m_Profiles[ProfileKey{data.Name, data.ScopeName}][data.ThreadID].push_back(data);
 }
 
-bool has_non_ascii(const std::string& str) {
-    return std::any_of(str.begin(), str.end(), [](unsigned char c) {
-                           return c >= 128; // Non-ASCII characters are >= 128
-                       });
-}
-
-void check_json(const nlohmann::json& j) {
-    if (j.is_string()) {
-        if (has_non_ascii(j.get<std::string>())) {
-            std::cout << "Found non-ASCII string: " << j.get<std::string>() << std::endl;
-        }
-    } else if (j.is_object() || j.is_array()) {
-        for (auto& el : j.items()) {
-            check_json(el.value());
-        }
-    }
-}
-
 void Thryve::Core::ProfilingService::SaveProfileResultsToJson(std::string &filePath)
 {
     nlohmann::json _json;
@@ -121,7 +103,7 @@ void Thryve::Core::ProfilingService::SaveProfileResultsToJson(std::string &fileP
     if (std::ofstream _file(filePath); _file.is_open())
     {
         try {
-            if (std::ofstream _file(filePath); _file.is_open()) {
+            if (_file.is_open()) {
                 _file << _json.dump(4);
                 std::cout << "JsonFile created successfully." << std::endl;
             } else {
