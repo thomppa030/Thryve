@@ -13,7 +13,15 @@ add_compile_definitions(ENABLE_PROFILING)
 # Define the library target
 add_library(ThryveRenderer
         include/Core/Profiling.h
-        src/Core/Profiling.cpp)
+        src/Core/Profiling.cpp
+        src/Layer.cpp
+        include/Layer.h
+        include/LayerStack.cpp
+        include/LayerStack.h
+        src/imGui/imGuiLayer.cpp
+        include/imGui/imGuiLayer.h
+        include/imGui/VulkanImGuiLayer.cpp
+        include/imGui/VulkanImGuiLayer.h)
 
 # Precompiled header
 set(PRECOMPILE_HEADER "include/pch.h")
