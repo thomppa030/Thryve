@@ -2,7 +2,7 @@
 // Created by kprie on 17.04.2024.
 //
 #pragma once
-#include "imGuiLayer.h"
+#include "../imGui/imGuiLayer.h"
 
 namespace Thryve::UI {
 
@@ -14,7 +14,9 @@ class VulkanImGuiLayer final : public ImGuiLayer {
         void OnAttach() override;
         void OnDetach() override;
         void OnImGuiRender() override;
-    };
 
+        void Begin() override;
+        void End() override;
+};
 } // UI
 // Thryve

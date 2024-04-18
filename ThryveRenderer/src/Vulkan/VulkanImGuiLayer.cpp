@@ -2,7 +2,7 @@
 // Created by kprie on 17.04.2024.
 //
 
-#include "VulkanImGuiLayer.h"
+#include "Vulkan/VulkanImGuiLayer.h"
 
 #include <external/imgui/backends/imgui_impl_glfw.h>
 #include <external/imgui/imgui.h>
@@ -20,4 +20,6 @@ namespace Thryve::UI {
     void VulkanImGuiLayer::OnDetach() { ImGuiLayer::OnDetach(); }
 
     void VulkanImGuiLayer::OnImGuiRender() { ImGuiLayer::OnImGuiRender(); }
+    void VulkanImGuiLayer::Begin() {}
+    void VulkanImGuiLayer::End() {}
 } // namespace Thryve::UI

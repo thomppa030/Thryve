@@ -2,40 +2,31 @@
 // Created by kprie on 17.04.2024.
 //
 
-#include "imGuiLayer.h"
 
+#include "imGui/imGuiLayer.h"
+
+
+#include <external/imgui/backends/imgui_impl_glfw.h>
+#include <external/imgui/backends/imgui_impl_vulkan.h>
 #include <external/imgui/imgui.h>
+
+#include "Core/App.h"
+#include "Core/GraphicsAPI.h"
+#include "imGui/VulkanImGuiLayer.h"
 
 namespace Thryve::UI {
 
     ImGuiLayer::ImGuiLayer() : Layer{"ImGuiLayer"} {}
 
-    void ImGuiLayer::OnAttach()
+    ImGuiLayer* ImGuiLayer::Create()
     {
-        IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
-
-        ImGui::StyleColorsDark();
-    }
-
-    void ImGuiLayer::OnDetach()
-    {
-        ImGui::DestroyContext();
-    }
-
-    void ImGuiLayer::OnImGuiRender()
-    {
-        ImGui::ShowDemoWindow();
-    }
-
-    void ImGuiLayer::Begin()
-    {
-        ImGui::NewFrame();
-    }
-    void ImGuiLayer::End()
-    {
-        ImGuiIO& _io = ImGui::GetIO();
-
-        ImGui::Render();
+        switch (Core::RenderAPI::CurrentAPI())
+        {
+        case Core::GraphicsAPIType::NONE:
+            return nullptr;
+        case Core::GraphicsAPIType::VULKAN:
+            return new VulkanImGuiLayer;
+        }
+        return nullptr;
     }
 } // Thryve::UI

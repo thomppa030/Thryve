@@ -11,15 +11,12 @@ namespace Thryve::UI {
         ImGuiLayer();
         ~ImGuiLayer() override = default;
 
-        void OnAttach() override;
-        void OnDetach() override;
-        void OnImGuiRender() override;
+        static ImGuiLayer* Create();
 
-        void Begin();
-        void End();
+        virtual void Begin() = 0;
+        virtual void End() = 0;
 
     private:
         float m_Time{0.0f};
     };
-
 } // namespace Thryve::UI
