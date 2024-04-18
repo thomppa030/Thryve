@@ -5,6 +5,7 @@
 #ifndef RENDERCONTEXT_H
 #define RENDERCONTEXT_H
 #include "Core/Ref.h"
+#include "GLFW/glfw3.h"
 
 
 namespace Thryve::Rendering {
@@ -15,6 +16,8 @@ namespace Thryve::Rendering {
 
 		virtual void Init() = 0;
 		virtual void Run() = 0;
+
+	    virtual GLFWwindow* GetWindow() = 0;
 
 		static Core::SharedRef<RenderContext> Create();
 	};

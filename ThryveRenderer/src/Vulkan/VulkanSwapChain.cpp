@@ -16,7 +16,7 @@ VulkanSwapChain::VulkanSwapChain() :  m_renderPass(nullptr), m_swapChain(nullptr
 
     m_deviceSelector = Thryve::Rendering::VulkanContext::Get()->GetDevice();
     m_surface = Thryve::Rendering::VulkanContext::GetSurface();
-    m_window = Thryve::Rendering::VulkanContext::GetWindow();
+    m_window = Thryve::Rendering::VulkanContext::GetWindowStatic();
 
 }
 

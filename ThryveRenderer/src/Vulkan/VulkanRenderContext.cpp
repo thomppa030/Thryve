@@ -35,7 +35,7 @@ namespace Thryve::Rendering {
     void VulkanRenderContext::CreateSwapChain() {
         PROFILE_FUNCTION();
         int width, height = 0;
-        glfwGetFramebufferSize(VulkanContext::GetWindow(), &width, &height);
+        glfwGetFramebufferSize(VulkanContext::GetWindowStatic(), &width, &height);
         m_swapChain->InitializeSwapChain();
     }
 
@@ -173,7 +173,7 @@ namespace Thryve::Rendering {
 
     void VulkanRenderContext::MainLoop()
     {
-        while (!glfwWindowShouldClose(VulkanContext::GetWindow()))
+        while (!glfwWindowShouldClose(VulkanContext::GetWindowStatic()))
         {
             glfwPollEvents();
             DrawFrame();
