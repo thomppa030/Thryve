@@ -9,7 +9,8 @@
 #include "utils/VkDebugUtils.h"
 
 VulkanCommandBuffer::VulkanCommandBuffer(const VkCommandPool commandPool): m_commandPool(commandPool) {
-    m_device = Thryve::Rendering::VulkanContext::Get()->GetDevice()->GetLogicalDevice();
+    auto _deviceSelector = Thryve::Core::App::Get().GetWindow()->GetRenderContext().As<Thryve::Rendering::VulkanContext>()->GetDevice();
+    m_device = _deviceSelector->GetLogicalDevice();
 }
 
 VkCommandBuffer VulkanCommandBuffer::Allocate(bool bBegingRecording) {

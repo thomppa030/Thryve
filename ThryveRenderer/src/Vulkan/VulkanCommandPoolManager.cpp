@@ -9,7 +9,7 @@
 #include "utils/VkDebugUtils.h"
 
 VulkanCommandPoolManager::VulkanCommandPoolManager() {
-    auto _deviceSelector = Thryve::Rendering::VulkanContext::Get()->GetDevice();
+    auto _deviceSelector = Thryve::Core::App::Get().GetWindow()->GetRenderContext().As<Thryve::Rendering::VulkanContext>()->GetDevice();
     m_device = _deviceSelector->GetLogicalDevice();
     CreateCommandPool(_deviceSelector->FindQueueFamilies(_deviceSelector->GetPhysicalDevice()).GraphicsFamily.value());
 }

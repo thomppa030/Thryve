@@ -21,8 +21,9 @@ namespace Thryve::Core {
         m_window = Rendering::Window::Create(Rendering::WindowSettings());
         m_window->Init();
         m_renderContext = m_window->GetRenderContext();
-        // m_imGuiLayer = new UI::ImGuiLayer();
-        // PushLayer(m_imGuiLayer);
+        m_imGuiLayer = UI::ImGuiLayer::Create();
+        // We also Attach the Layer here
+        PushLayer(m_imGuiLayer);
     }
     App::~App()
     {
@@ -41,7 +42,6 @@ namespace Thryve::Core {
     void App::PushLayer(Layer* layer)
     {
         m_layerStack.PushLayer(layer);
-        layer->OnAttach();
     }
 
     void App::PushOverlay(Layer* overlay)
@@ -52,13 +52,13 @@ namespace Thryve::Core {
 
     void App::Run()
     {
-        m_renderContext->Run();
+        m_imGuiLayer->Begin();
+        for (auto* layer : m_layerStack)
+        {
+              layer->OnImGuiRender();
+        }
+        m_imGuiLayer->End();
 
-        // m_imGuiLayer->Begin();
-        // for (auto* layer : m_layerStack)
-        // {
-        //     layer->OnImGuiRender();
-        // }
-        // m_imGuiLayer->End();
+        m_renderContext->Run();
     }
 } // namespace Thryve::Core

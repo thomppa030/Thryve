@@ -111,7 +111,6 @@ namespace Thryve::Rendering
 
         void InitVulkan();
         void PickSuitableDevices();
-        void CreateSwapChain();
         void CreateGraphicsPipeline();
         void CreateFramebuffers();
         void AssignCommandPool();

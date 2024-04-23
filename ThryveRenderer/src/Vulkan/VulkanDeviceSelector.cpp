@@ -70,7 +70,11 @@ VulkanDeviceSelector & VulkanDeviceSelector::operator=(VulkanDeviceSelector && o
 
 
 VkDevice VulkanDeviceSelector::GetLogicalDevice() {
-    return m_logicalDevice;
+    if (m_logicalDevice)
+    {
+        return m_logicalDevice;
+    }
+    throw std::runtime_error("No Logical Device!");
 }
 
 VkPhysicalDevice VulkanDeviceSelector::GetPhysicalDevice() const {

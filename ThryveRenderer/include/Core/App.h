@@ -26,6 +26,11 @@ namespace Thryve::Core {
     public:
         App();
         ~App();
+
+        void SetCurrentImageIndex(const uint32_t index) {CurrentImageIndex = index;};
+
+        uint32_t GetCurrentImageIndex() const {return CurrentImageIndex;}
+
         static App& Get() { return *s_Instance; }
 
         static AppSpecification GetAppSpecification();
@@ -52,6 +57,8 @@ namespace Thryve::Core {
 
         UI::ImGuiLayer* m_imGuiLayer;
         LayerStack m_layerStack;
+
+        uint32_t CurrentImageIndex{0};
 
         SharedRef<Rendering::RenderContext> m_renderContext{nullptr};
     };

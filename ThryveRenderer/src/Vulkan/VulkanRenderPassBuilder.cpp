@@ -8,7 +8,8 @@
 #include "utils/ImageUtils.h"
 
 VulkanRenderPassBuilder::VulkanRenderPassBuilder(){
-    m_device = Thryve::Rendering::VulkanContext::Get()->GetDevice()->GetLogicalDevice();
+    m_deviceSelector = Thryve::Core::App::Get().GetWindow()->GetRenderContext().As<Thryve::Rendering::VulkanContext>()->GetDevice();
+    m_device = m_deviceSelector->GetLogicalDevice();
 }
 
 VulkanRenderPassBuilder::~VulkanRenderPassBuilder() {
@@ -40,7 +41,7 @@ void VulkanRenderPassBuilder::CreateStandardRenderPasses(const VkFormat swapChai
         colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
         VkAttachmentDescription depthAttachment{};
-        depthAttachment.format = ImageUtils::FindDepthFormat();
+        depthAttachment.format = ImageUtils::FindDepthFormat(m_deviceSelector->GetPhysicalDevice());
         depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
         depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;

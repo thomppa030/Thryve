@@ -25,7 +25,7 @@ namespace Thryve::UI {
         case Core::GraphicsAPIType::NONE:
             return nullptr;
         case Core::GraphicsAPIType::VULKAN:
-            return new VulkanImGuiLayer;
+            return new VulkanImGuiLayer();
         }
         return nullptr;
     }

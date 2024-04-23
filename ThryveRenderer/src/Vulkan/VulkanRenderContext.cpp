@@ -7,8 +7,9 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "tiny_obj_loader.h"
+#include <external/imgui/backends/imgui_impl_vulkan.h>
 #include <iostream>
+#include "tiny_obj_loader.h"
 
 #include "Config.h"
 #include "Core/Profiling.h"
@@ -30,11 +31,6 @@ namespace Thryve::Rendering {
     }
 
     VulkanRenderContext::~VulkanRenderContext() {
-    }
-
-    void VulkanRenderContext::CreateSwapChain() {
-        PROFILE_FUNCTION();
-        m_swapChain->InitializeSwapChain();
     }
 
     void VulkanRenderContext::CreateFramebuffers() {
@@ -125,7 +121,6 @@ namespace Thryve::Rendering {
         PickSuitableDevices();
 
         m_swapChain = Core::App::Get().GetWindow().As<VulkanWindow>()->GetSwapChain();
-        CreateSwapChain();
         m_renderPass = m_swapChain->GetRenderPass();
 
         m_descriptorPool = CreateDescriptorPool();
@@ -244,7 +239,7 @@ namespace Thryve::Rendering {
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
         VK_CALL(vkBeginCommandBuffer(commandBuffer, &beginInfo));
-
+        Core::App::Get().SetCurrentImageIndex(imageIndex);
         const auto framebuffers = m_swapChain->GetFrameBuffers();
         m_renderPass = m_swapChain->GetRenderPass();
 

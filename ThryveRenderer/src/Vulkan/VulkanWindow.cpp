@@ -43,6 +43,7 @@ namespace Thryve::Rendering {
         Core::SharedRef<VulkanContext> _context = m_renderContext.As<VulkanContext>();
 
         m_swapChain = new VulkanSwapChain(_context);
+        m_swapChain->InitializeSwapChain();
     }
 
     VkSurfaceKHR VulkanWindow::CreateSurface() const

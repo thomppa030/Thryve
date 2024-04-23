@@ -3,6 +3,7 @@
 //
 #pragma once
 
+#include "Core/App.h"
 #include "GLFW/glfw3.h"
 #include "VulkanDeviceSelector.h"
 #include "pch.h"
@@ -20,6 +21,7 @@ public:
     ~VulkanSwapChain();
 
     bool HandlePresentResult(VkResult result);
+
 
     VulkanSwapChain(const VulkanSwapChain&) = delete; // Disable copy operations
     VulkanSwapChain& operator=(const VulkanSwapChain&) = delete;
@@ -39,6 +41,7 @@ public:
     [[nodiscard]] VkFormat GetSwapchainImageFormat() const { return m_swapChainImageFormat; };
     [[nodiscard]] std::vector<VkImage> GetSwapchainImages() const { return m_swapChainImages; }
     [[nodiscard]] std::vector<VkFramebuffer> GetFrameBuffers() const { return m_Framebuffers; }
+    VkFramebuffer GetCurrentFramebuffer() const {return m_Framebuffers[Thryve::Core::App::Get().GetCurrentImageIndex()];}
 
     std::pair<VkResult, std::optional<uint32_t>> AcquireNextImage(VkSemaphore imageAvailableSemaphore);
 

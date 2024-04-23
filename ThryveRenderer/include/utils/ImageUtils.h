@@ -17,9 +17,9 @@ namespace ImageUtils {
                             VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image,
                             VkDeviceMemory &imageMemory)
     {
-
-        VkDevice _device = Thryve::Rendering::VulkanContext::GetCurrentDevice()->GetLogicalDevice();
-        VkPhysicalDevice _physicalDevice = Thryve::Rendering::VulkanContext::GetCurrentDevice()->GetPhysicalDevice();
+        auto _deviceSelector = Thryve::Core::App::Get().GetWindow()->GetRenderContext().As<Thryve::Rendering::VulkanContext>()->GetDevice();
+        VkDevice _device = _deviceSelector->GetLogicalDevice();
+        VkPhysicalDevice _physicalDevice = _deviceSelector->GetPhysicalDevice();
 
         VkImageCreateInfo imageCreateInfo{};
         imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -66,7 +66,8 @@ namespace ImageUtils {
         viewInfo.subresourceRange.baseArrayLayer = 0;
         viewInfo.subresourceRange.layerCount = 1;
 
-        VkDevice _device = Thryve::Rendering::VulkanContext::GetCurrentDevice()->GetLogicalDevice();
+        auto _deviceSelector = Thryve::Core::App::Get().GetWindow()->GetRenderContext().As<Thryve::Rendering::VulkanContext>()->GetDevice();
+        VkDevice _device = _deviceSelector->GetLogicalDevice();
 
         VkImageView imageView;
         VK_CALL(vkCreateImageView(_device, &viewInfo, nullptr, &imageView));
@@ -149,14 +150,14 @@ namespace ImageUtils {
         SingleTimeCommandUtil::EndSingleTimeCommands(device, commandPool, transferQueue, commandBuffer);
     };
 
-    static VkFormat FindSupportedFormat(const std::vector<VkFormat> &canditates, VkImageTiling tiling,
+    static VkFormat FindSupportedFormat(VkPhysicalDevice _physicalDevice, const std::vector<VkFormat> &canditates, VkImageTiling tiling,
                                                       VkFormatFeatureFlags featureFlags)
     {
         for (auto candidate : canditates)
         {
             VkFormatProperties props;
             vkGetPhysicalDeviceFormatProperties(
-                Thryve::Rendering::VulkanContext::GetCurrentDevice()->GetPhysicalDevice(), candidate, &props);
+                _physicalDevice, candidate, &props);
 
             if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & featureFlags) == featureFlags)
             {
@@ -170,9 +171,9 @@ namespace ImageUtils {
         throw std::runtime_error("Failed to find supported format!");
     }
     
-    static VkFormat FindDepthFormat()
+    static VkFormat FindDepthFormat(VkPhysicalDevice physicalDevice)
     {
-        return FindSupportedFormat({VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
+        return FindSupportedFormat(physicalDevice,{VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
                                    VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
     }
 

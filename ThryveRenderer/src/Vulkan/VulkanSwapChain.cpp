@@ -255,7 +255,7 @@ void VulkanSwapChain::CreateImageViews()
         createInfo.subresourceRange.baseArrayLayer = 0;
         createInfo.subresourceRange.layerCount = 1;
 
-        const VkDevice _device = Thryve::Rendering::VulkanContext::GetCurrentDevice()->GetLogicalDevice();
+        VkDevice _device = m_deviceSelector->GetLogicalDevice();
         VK_CALL(vkCreateImageView(_device, &createInfo, nullptr, &m_swapChainImageViews[i]));
     }
 }
@@ -373,7 +373,7 @@ void VulkanSwapChain::CreateDepthResources()
     PROFILE_FUNCTION()
     VkDevice _device = m_deviceSelector->GetLogicalDevice();
 
-    VkFormat _depthFormat = ImageUtils::FindDepthFormat();
+    VkFormat _depthFormat = ImageUtils::FindDepthFormat(m_deviceSelector->GetPhysicalDevice());
 
     ImageUtils::CreateImage(GetSwapchainExtent().width, GetSwapchainExtent().height, _depthFormat,
                             VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,

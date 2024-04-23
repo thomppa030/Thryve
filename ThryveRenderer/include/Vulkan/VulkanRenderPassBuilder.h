@@ -6,6 +6,8 @@
 //
 
 #include <unordered_map>
+
+#include "VulkanContext.h"
 #include "VulkanRenderPass.h"
 
 
@@ -33,6 +35,7 @@ public:
 private:
     VkDevice m_device;
     std::unordered_map<std::string, std::shared_ptr<VulkanRenderPass>> m_renderPasses;
+    Thryve::Core::SharedRef<VulkanDeviceSelector> m_deviceSelector;
 
     void CleanupRenderPasses();
 };
