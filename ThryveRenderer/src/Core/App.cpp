@@ -18,8 +18,8 @@ namespace Thryve::Core {
 
         PopulateAppSpecs();
         m_renderContext = Rendering::RenderContext::Create();
-        m_imGuiLayer = new UI::ImGuiLayer();
-        PushLayer(m_imGuiLayer);
+        // m_imGuiLayer = new UI::ImGuiLayer();
+        // PushLayer(m_imGuiLayer);
     }
     App::~App() { m_renderContext.Reset(); }
 
@@ -49,11 +49,11 @@ namespace Thryve::Core {
     {
         m_renderContext->Run();
 
-        m_imGuiLayer->Begin();
-        for (auto* layer : m_layerStack)
-        {
-            layer->OnImGuiRender();
-        }
-        m_imGuiLayer->End();
+        // m_imGuiLayer->Begin();
+        // for (auto* layer : m_layerStack)
+        // {
+        //     layer->OnImGuiRender();
+        // }
+        // m_imGuiLayer->End();
     }
 } // namespace Thryve::Core

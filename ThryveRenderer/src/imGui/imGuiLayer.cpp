@@ -12,7 +12,7 @@
 
 #include "Core/App.h"
 #include "Core/GraphicsAPI.h"
-#include "imGui/VulkanImGuiLayer.h"
+#include "Vulkan/VulkanImGuiLayer.h"
 
 namespace Thryve::UI {
 

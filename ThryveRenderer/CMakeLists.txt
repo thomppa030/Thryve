@@ -20,8 +20,8 @@ add_library(ThryveRenderer
         include/LayerStack.h
         src/imGui/imGuiLayer.cpp
         include/imGui/imGuiLayer.h
-        include/imGui/VulkanImGuiLayer.cpp
-        include/imGui/VulkanImGuiLayer.h)
+        src/Vulkan/VulkanImGuiLayer.cpp
+        include/Vulkan/VulkanImGuiLayer.h)
 
 # Precompiled header
 set(PRECOMPILE_HEADER "include/pch.h")
