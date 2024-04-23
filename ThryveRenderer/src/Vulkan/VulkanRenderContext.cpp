@@ -34,15 +34,7 @@ namespace Thryve::Rendering {
 
     void VulkanRenderContext::CreateSwapChain() {
         PROFILE_FUNCTION();
-        int width, height = 0;
-        glfwGetFramebufferSize(VulkanContext::GetWindowStatic(), &width, &height);
         m_swapChain->InitializeSwapChain();
-    }
-
-    void VulkanRenderContext::InitRenderPassFactory() {
-        PROFILE_FUNCTION()
-        m_renderPassFactory = std::make_unique<VulkanRenderPassBuilder>();
-        m_renderPassFactory->CreateStandardRenderPasses(m_swapChain->GetSwapchainImageFormat());
     }
 
     void VulkanRenderContext::CreateFramebuffers() {
@@ -50,12 +42,7 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::CreateCommandPool() {
-        m_cmdPoolManager = std::make_unique<VulkanCommandPoolManager>();
-        m_commandPool = m_cmdPoolManager->GetCommandPool();
-    }
-
-    void VulkanRenderContext::InitCmdBufferManager() {
-        m_cmdBuffer = std::make_unique<VulkanCommandBuffer>(m_commandPool);
+        m_commandPool = m_swapChain->GetCommandPool();
     }
 
     VkDescriptorPool VulkanRenderContext::CreateDescriptorPool() const {
@@ -117,7 +104,7 @@ namespace Thryve::Rendering {
 
     void VulkanRenderContext::CreateTextureImage(const std::string &path) {
         m_VulkanTextureImage =
-            std::make_unique<VulkanTextureImage>(m_cmdPoolManager->GetCommandPool(), m_commandBuffer);
+            std::make_unique<VulkanTextureImage>(m_swapChain->GetCommandPool(), m_commandBuffer);
         m_VulkanTextureImage->createTextureImage(path);
         m_textureImage = m_VulkanTextureImage->GetTextureImage();
     }
@@ -136,19 +123,17 @@ namespace Thryve::Rendering {
     {
         PROFILE_FUNCTION();
         PickSuitableDevices();
+        // Start here
         m_swapChain = std::make_unique<VulkanSwapChain>();
         CreateSwapChain();
-        InitRenderPassFactory();
-        m_renderPass = m_renderPassFactory->GetRenderPass("default")->GetRenderPass();
-        m_swapChain->SetRenderPass(m_renderPass);
+        m_renderPass = m_swapChain->GetRenderPass();
 
         m_descriptorPool = CreateDescriptorPool();
         m_descriptorManager = Core::UniqueRef<VulkanDescriptorManager>::Create(m_descriptorPool);
         CreateDescriptorSetLayout();
         CreateGraphicsPipeline();
         CreateCommandPool();
-        m_swapChain->CreateDepthResources();
-        CreateFramebuffers();
+        // Stop Refactor
         auto _imagePath = std::string(RESOURCE_DIR) + "/viking_room.png";
         CreateTextureImage(_imagePath);
         CreateTextureImageView();
@@ -159,7 +144,6 @@ namespace Thryve::Rendering {
         CreateIndexBuffer();
         CreateUniformBuffer();
         CreateDescriptorSets();
-        InitCmdBufferManager();
         CreateCommandBuffer();
         CreateSyncObjects();
     }
@@ -186,13 +170,9 @@ namespace Thryve::Rendering {
         PROFILE_FUNCTION();
         m_swapChain.reset();
         m_FrameSynchronizer.reset();
-        m_cmdBuffer->Free(m_commandBuffer);
-        m_cmdBuffer.reset();
         m_indexBuffer.reset();
         m_vulkanVertexBuffer.reset();
-        m_cmdPoolManager.reset();
         m_pipeline.reset();
-        m_renderPassFactory.reset();
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
              vkDestroyBuffer(m_device, m_uniformBuffers[i], nullptr);
@@ -255,11 +235,10 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::CreateCommandBuffer() {
-        PROFILE_FUNCTION()
-        m_commandBuffer = m_cmdBuffer->Allocate();
+        m_commandBuffer = m_swapChain->GetCommandBuffer();
     }
 
-    void VulkanRenderContext::RecordCommandBufferSegment(VkCommandBuffer commandBuffer, const uint32_t imageIndex) const {
+    void VulkanRenderContext::RecordCommandBufferSegment(VkCommandBuffer commandBuffer, const uint32_t imageIndex) {
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -267,6 +246,7 @@ namespace Thryve::Rendering {
         VK_CALL(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 
         const auto framebuffers = m_swapChain->GetFrameBuffers();
+        m_renderPass = m_swapChain->GetRenderPass();
 
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -359,7 +339,8 @@ namespace Thryve::Rendering {
                 UpdateUniformBuffer(currentFrame);
 
                 VK_CALL(vkResetFences(m_device, 1, &_syncObjects.in_flight_fence));
-
+                m_commandBuffer = m_swapChain->GetCommandBuffer();
+                // CommandBuffer goes out od scope somewhere I think
                 VK_CALL(vkResetCommandBuffer(m_commandBuffer, /*VkCommandBufferResetFlagBits*/ 0));
                 RecordCommandBufferSegment(m_commandBuffer, _imageIndex);
 

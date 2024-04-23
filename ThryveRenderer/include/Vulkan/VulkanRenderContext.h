@@ -78,15 +78,12 @@ namespace Thryve::Rendering
         // Swap chain and rendering setup
         std::unique_ptr<VulkanSwapChain> m_swapChain;
         VkRenderPass m_renderPass;
-        std::unique_ptr<VulkanRenderPassBuilder> m_renderPassFactory;
         std::unique_ptr<VulkanPipeline> m_pipeline;
         VkFramebuffer m_framebuffer;
 
         // Command processing
         VkCommandPool m_commandPool;
-        std::unique_ptr<VulkanCommandPoolManager> m_cmdPoolManager;
         VkCommandBuffer m_commandBuffer;
-        std::unique_ptr<VulkanCommandBuffer> m_cmdBuffer;
 
         // Buffers, vertices, and indices
         std::unique_ptr<VulkanVertexBuffer<Vertex3D>> m_vulkanVertexBuffer;
@@ -115,11 +112,9 @@ namespace Thryve::Rendering
         void InitVulkan();
         void PickSuitableDevices();
         void CreateSwapChain();
-        void InitRenderPassFactory();
         void CreateGraphicsPipeline();
         void CreateFramebuffers();
         void CreateCommandPool();
-        void InitCmdBufferManager();
         void CreateVertexBuffer();
         void CreateIndexBuffer();
         void CreateUniformBuffer();
@@ -131,7 +126,7 @@ namespace Thryve::Rendering
         void CreateDescriptorSets();
         void CreateCommandBuffer();
 
-        void RecordCommandBufferSegment(VkCommandBuffer commandBuffer, uint32_t imageIndex) const;
+        void RecordCommandBufferSegment(VkCommandBuffer commandBuffer, uint32_t imageIndex);
         // Main loop and frame drawing
         void MainLoop();
         void DrawFrame();

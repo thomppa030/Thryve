@@ -7,6 +7,10 @@
 #include "VulkanDeviceSelector.h"
 #include "pch.h"
 
+
+class VulkanRenderPassBuilder;
+class VulkanCommandBuffer;
+class VulkanCommandPoolManager;
 class VulkanSwapChain {
 public:
     VulkanSwapChain();
@@ -21,7 +25,7 @@ public:
     VulkanSwapChain& operator=(VulkanSwapChain&&) noexcept;
 
     void InitializeSwapChain();
-    void CleanupSwapChain() const; // For explicit cleanup, can be called before the destructor
+    void CleanupSwapChain(); // For explicit cleanup, can be called before the destructor
 
     void CreateFramebuffers(VkDevice device);
     void RecreateSwapChain();
@@ -46,10 +50,18 @@ public:
     void CreateDepthResources();
     void CreateImageViews(); // Helper method to create image views for the swap chain images
 
+    VkRenderPass GetRenderPass() const { return m_renderPass;}
+    VkCommandPool GetCommandPool() const { return m_commandPool;}
+    VkCommandBuffer GetCommandBuffer() const { return m_commandBuffer;}
+
 private:
     Thryve::Core::SharedRef<VulkanDeviceSelector> m_deviceSelector;
+    std::unique_ptr<VulkanCommandPoolManager> m_commandPoolManager;
+    std::unique_ptr<VulkanCommandBuffer> m_vulkanCommandBuffer;
     VkSurfaceKHR m_surface;
     GLFWwindow* m_window;
+    VkCommandPool m_commandPool;
+    VkCommandBuffer m_commandBuffer;
     VkRenderPass m_renderPass;
 
     VkSwapchainKHR m_swapChain;
@@ -60,6 +72,7 @@ private:
 
     std::vector<VkImageView> m_swapChainImageViews;
     std::vector<VkFramebuffer> m_Framebuffers;
+    std::unique_ptr<VulkanRenderPassBuilder> m_renderPassBuilder;
 
     // Additional helper methods for swap chain creation and management
 

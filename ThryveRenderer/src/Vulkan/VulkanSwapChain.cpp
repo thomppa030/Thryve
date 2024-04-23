@@ -84,12 +84,14 @@ VulkanSwapChain & VulkanSwapChain::operator=(VulkanSwapChain && other) noexcept 
 
 void VulkanSwapChain::InitializeSwapChain() {
     CreateSwapChain();
-    CreateImageViews();
 }
 
-void VulkanSwapChain::CleanupSwapChain() const {
+void VulkanSwapChain::CleanupSwapChain() {
     VkDevice _device = Thryve::Rendering::VulkanContext::GetCurrentDevice()->GetLogicalDevice();
 
+    m_renderPassBuilder.reset();
+    m_vulkanCommandBuffer.reset();
+    m_commandPoolManager.reset();
     vkDestroyImageView(_device,m_DepthImageView, nullptr);
     vkDestroyImage(_device, m_DepthImage, nullptr);
     vkFreeMemory(_device, m_DepthImageMemory, nullptr);
@@ -143,9 +145,7 @@ void VulkanSwapChain::RecreateSwapChain() {
         vkDeviceWaitIdle(_device);
 
         CleanupSwapChain();
-        InitializeSwapChain();
-        CreateDepthResources();
-        CreateFramebuffers(_device);
+        CreateSwapChain();
 }
 
 void VulkanSwapChain::CreateSwapChain() {
@@ -155,8 +155,6 @@ void VulkanSwapChain::CreateSwapChain() {
 
         SwapChainSupportDetails swapChainSupport = m_deviceSelector->QuerySwapChainSupport(_physicalDevice);
 
-        VkSwapchainKHR oldSwapchain = m_swapChain;
-
         //TODO Refactor from class to utilityclass, maybe? Could also be too much abstraction
         const VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.Formats);
         const VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.PresentModes);
@@ -164,43 +162,43 @@ void VulkanSwapChain::CreateSwapChain() {
 
         //TODO Update Dimensions here?
 
-        uint32_t imageCount = swapChainSupport.Capabilities.minImageCount + 10;
+        uint32_t imageCount = swapChainSupport.Capabilities.minImageCount + 3;
 
         if (swapChainSupport.Capabilities.maxImageCount > 0 && imageCount > swapChainSupport.Capabilities.maxImageCount)
         {
             imageCount = swapChainSupport.Capabilities.maxImageCount;
         }
 
-        VkSwapchainCreateInfoKHR createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        createInfo.surface = m_surface;
+        VkSwapchainCreateInfoKHR _createInfo{};
+        _createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+        _createInfo.surface = m_surface;
 
-        createInfo.minImageCount = imageCount;
-        createInfo.imageFormat = surfaceFormat.format;
-        createInfo.imageColorSpace = surfaceFormat.colorSpace;
-        createInfo.imageExtent = extent;
-        createInfo.imageArrayLayers = 1;
-        createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        _createInfo.minImageCount = imageCount;
+        _createInfo.imageFormat = surfaceFormat.format;
+        _createInfo.imageColorSpace = surfaceFormat.colorSpace;
+        _createInfo.imageExtent = extent;
+        _createInfo.imageArrayLayers = 1;
+        _createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
         auto [graphicsFamily, presentFamily] = m_deviceSelector->FindQueueFamilies(_physicalDevice);
         const uint32_t queueFamilyIndices[] = {graphicsFamily.value(), presentFamily.value()};
 
         if (graphicsFamily != presentFamily) {
-            createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-            createInfo.queueFamilyIndexCount = 2;
-            createInfo.pQueueFamilyIndices = queueFamilyIndices;
+            _createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+            _createInfo.queueFamilyIndexCount = 2;
+            _createInfo.pQueueFamilyIndices = queueFamilyIndices;
         } else {
-            createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            _createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
         }
 
-        createInfo.preTransform = swapChainSupport.Capabilities.currentTransform;
-        createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-        createInfo.presentMode = presentMode;
-        createInfo.clipped = VK_TRUE;
-        createInfo.oldSwapchain = VK_NULL_HANDLE;
+        _createInfo.preTransform = swapChainSupport.Capabilities.currentTransform;
+        _createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+        _createInfo.presentMode = presentMode;
+        _createInfo.clipped = VK_TRUE;
+        _createInfo.oldSwapchain = VK_NULL_HANDLE;
 
         {
-            VK_CALL(vkCreateSwapchainKHR(_device, &createInfo, nullptr, &m_swapChain));
+            VK_CALL(vkCreateSwapchainKHR(_device, &_createInfo, nullptr, &m_swapChain));
         }
 
         {
@@ -211,6 +209,24 @@ void VulkanSwapChain::CreateSwapChain() {
 
         m_swapChainImageFormat = surfaceFormat.format;
         m_swapChainExtent = extent;
+
+    CreateImageViews();
+
+    // Create CommandPool
+    m_commandPoolManager = std::make_unique<VulkanCommandPoolManager>();
+    m_commandPool = m_commandPoolManager->GetCommandPool();
+
+    // Create Command Buffer
+    m_vulkanCommandBuffer = std::make_unique<VulkanCommandBuffer>(m_commandPool);
+    m_commandBuffer = m_vulkanCommandBuffer->Allocate();
+    // Synchronization Objects
+    // Create Render Pass
+    m_renderPassBuilder = std::make_unique<VulkanRenderPassBuilder>();
+    m_renderPassBuilder->CreateStandardRenderPasses(m_swapChainImageFormat);
+    m_renderPass = m_renderPassBuilder->GetRenderPass("default")->GetRenderPass();
+    // Framebuffer for (every) Swapchain Image
+    CreateDepthResources();
+    CreateFramebuffers(_device);
 }
 
 void VulkanSwapChain::CreateImageViews() {
