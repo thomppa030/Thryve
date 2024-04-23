@@ -11,9 +11,12 @@
 class VulkanRenderPassBuilder;
 class VulkanCommandBuffer;
 class VulkanCommandPoolManager;
-class VulkanSwapChain {
+namespace Thryve::Rendering {
+    class VulkanContext;
+}
+class VulkanSwapChain final {
 public:
-    VulkanSwapChain();
+    VulkanSwapChain(Thryve::Core::SharedRef<Thryve::Rendering::VulkanContext> context);
     ~VulkanSwapChain();
 
     bool HandlePresentResult(VkResult result);
@@ -30,12 +33,12 @@ public:
     void CreateFramebuffers(VkDevice device);
     void RecreateSwapChain();
 
-    [[nodiscard]] VkSwapchainKHR GetSwapchain() const {return m_swapChain;}
-    [[nodiscard]] std::vector<VkImageView> GetSwapchainImageViews() const {return m_swapChainImageViews;}
-    [[nodiscard]] VkExtent2D GetSwapchainExtent() const {return m_swapChainExtent;}
-    [[nodiscard]] VkFormat GetSwapchainImageFormat()const { return m_swapChainImageFormat; };
-    [[nodiscard]] std::vector<VkImage> GetSwapchainImages()const {return m_swapChainImages;}
-    [[nodiscard]] std::vector<VkFramebuffer> GetFrameBuffers()const {return m_Framebuffers;}
+    [[nodiscard]] VkSwapchainKHR GetSwapchain() const { return m_swapChain; }
+    [[nodiscard]] std::vector<VkImageView> GetSwapchainImageViews() const { return m_swapChainImageViews; }
+    [[nodiscard]] VkExtent2D GetSwapchainExtent() const { return m_swapChainExtent; }
+    [[nodiscard]] VkFormat GetSwapchainImageFormat() const { return m_swapChainImageFormat; };
+    [[nodiscard]] std::vector<VkImage> GetSwapchainImages() const { return m_swapChainImages; }
+    [[nodiscard]] std::vector<VkFramebuffer> GetFrameBuffers() const { return m_Framebuffers; }
 
     std::pair<VkResult, std::optional<uint32_t>> AcquireNextImage(VkSemaphore imageAvailableSemaphore);
 
@@ -44,15 +47,15 @@ public:
     void SetRenderPass(VkRenderPass renderPass);
 
     VkResult PresentImage(uint32_t imageIndex, VkSemaphore renderFinishedSemaphore) const;
-    
+
     void CreateSwapChain();
     // Depth Functions
     void CreateDepthResources();
     void CreateImageViews(); // Helper method to create image views for the swap chain images
 
-    VkRenderPass GetRenderPass() const { return m_renderPass;}
-    VkCommandPool GetCommandPool() const { return m_commandPool;}
-    VkCommandBuffer GetCommandBuffer() const { return m_commandBuffer;}
+    VkRenderPass GetRenderPass() const { return m_renderPass; }
+    VkCommandPool GetCommandPool() const { return m_commandPool; }
+    VkCommandBuffer GetCommandBuffer() const { return m_commandBuffer; }
 
 private:
     Thryve::Core::SharedRef<VulkanDeviceSelector> m_deviceSelector;
@@ -84,6 +87,4 @@ private:
     VkImage m_DepthImage;
     VkDeviceMemory m_DepthImageMemory;
     VkImageView m_DepthImageView;
-
-
 };

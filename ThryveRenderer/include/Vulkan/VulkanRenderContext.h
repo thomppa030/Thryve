@@ -76,7 +76,7 @@ namespace Thryve::Rendering
         void LoadModel(const std::string& path);
 
         // Swap chain and rendering setup
-        std::unique_ptr<VulkanSwapChain> m_swapChain;
+        VulkanSwapChain* m_swapChain;
         VkRenderPass m_renderPass;
         std::unique_ptr<VulkanPipeline> m_pipeline;
         VkFramebuffer m_framebuffer;
@@ -114,7 +114,7 @@ namespace Thryve::Rendering
         void CreateSwapChain();
         void CreateGraphicsPipeline();
         void CreateFramebuffers();
-        void CreateCommandPool();
+        void AssignCommandPool();
         void CreateVertexBuffer();
         void CreateIndexBuffer();
         void CreateUniformBuffer();
@@ -124,7 +124,7 @@ namespace Thryve::Rendering
         void CreateTextureSampler();
         [[nodiscard]] VkDescriptorPool CreateDescriptorPool() const;
         void CreateDescriptorSets();
-        void CreateCommandBuffer();
+        void AssignCommandBuffer();
 
         void RecordCommandBufferSegment(VkCommandBuffer commandBuffer, uint32_t imageIndex);
         // Main loop and frame drawing

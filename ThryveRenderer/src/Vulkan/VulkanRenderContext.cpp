@@ -41,7 +41,7 @@ namespace Thryve::Rendering {
         m_swapChain->CreateFramebuffers(m_device);
     }
 
-    void VulkanRenderContext::CreateCommandPool() {
+    void VulkanRenderContext::AssignCommandPool() {
         m_commandPool = m_swapChain->GetCommandPool();
     }
 
@@ -123,8 +123,8 @@ namespace Thryve::Rendering {
     {
         PROFILE_FUNCTION();
         PickSuitableDevices();
-        // Start here
-        m_swapChain = std::make_unique<VulkanSwapChain>();
+
+        m_swapChain = Core::App::Get().GetWindow().As<VulkanWindow>()->GetSwapChain();
         CreateSwapChain();
         m_renderPass = m_swapChain->GetRenderPass();
 
@@ -132,8 +132,10 @@ namespace Thryve::Rendering {
         m_descriptorManager = Core::UniqueRef<VulkanDescriptorManager>::Create(m_descriptorPool);
         CreateDescriptorSetLayout();
         CreateGraphicsPipeline();
-        CreateCommandPool();
+        AssignCommandPool();
+        AssignCommandBuffer();
         // Stop Refactor
+
         auto _imagePath = std::string(RESOURCE_DIR) + "/viking_room.png";
         CreateTextureImage(_imagePath);
         CreateTextureImageView();
@@ -144,7 +146,6 @@ namespace Thryve::Rendering {
         CreateIndexBuffer();
         CreateUniformBuffer();
         CreateDescriptorSets();
-        CreateCommandBuffer();
         CreateSyncObjects();
     }
     void VulkanRenderContext::PickSuitableDevices()
@@ -168,7 +169,6 @@ namespace Thryve::Rendering {
 
     void VulkanRenderContext::Cleanup() {
         PROFILE_FUNCTION();
-        m_swapChain.reset();
         m_FrameSynchronizer.reset();
         m_indexBuffer.reset();
         m_vulkanVertexBuffer.reset();
@@ -234,7 +234,7 @@ namespace Thryve::Rendering {
         }
     }
 
-    void VulkanRenderContext::CreateCommandBuffer() {
+    void VulkanRenderContext::AssignCommandBuffer() {
         m_commandBuffer = m_swapChain->GetCommandBuffer();
     }
 

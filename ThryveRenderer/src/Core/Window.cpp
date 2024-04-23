@@ -3,4 +3,20 @@
 //
 
 #include "Core/Window.h"
-Window::Window(const WindowSettings& windowSpecs) {}
+
+#include "Core/GraphicsAPI.h"
+#include "Vulkan/VulkanContext.h"
+
+namespace Thryve::Rendering {
+    Core::SharedRef<Window> Window::Create(const WindowSettings& settings)
+    {
+            switch (Core::RenderAPI::CurrentAPI())
+            {
+            case Core::GraphicsAPIType::NONE:
+                return nullptr;
+            case Core::GraphicsAPIType::VULKAN:
+                return Core::SharedRef<VulkanWindow>::Create(settings);
+            }
+            return nullptr;
+    }
+}

@@ -5,6 +5,7 @@
 #include "Core/App.h"
 
 #include "Core/System.h"
+#include "Core/Window.h"
 #include "Layer.h"
 #include "imGui/imGuiLayer.h"
 
@@ -17,11 +18,15 @@ namespace Thryve::Core {
         s_Instance = this;
 
         PopulateAppSpecs();
-        m_renderContext = Rendering::RenderContext::Create();
+        m_window = Rendering::Window::Create(Rendering::WindowSettings());
+        m_window->Init();
+        m_renderContext = m_window->GetRenderContext();
         // m_imGuiLayer = new UI::ImGuiLayer();
         // PushLayer(m_imGuiLayer);
     }
-    App::~App() { m_renderContext.Reset(); }
+    App::~App()
+    {
+    }
 
     void App::PopulateAppSpecs()
     {

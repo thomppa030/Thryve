@@ -7,7 +7,7 @@
 #include "Renderer/Renderer.h"
 #include "Vulkan/VulkanInstance.h"
 #include "Vulkan/VulkanRenderContext.h"
-#include "Vulkan/VulkanWindowContext.h"
+#include "Vulkan/VulkanWindow.h"
 #include "VulkanDeviceSelector.h"
 
 const std::vector<const char *> DEVICE_EXTENSIONS = {
@@ -46,7 +46,6 @@ namespace Thryve::Rendering {
         void Run() override;
 
     private:
-        Core::SharedRef<VulkanWindowContext> m_windowContext;
         Core::SharedRef<VulkanDeviceSelector> m_device;
         Core::SharedRef<VulkanInstance> m_vulkanInstance;
         Core::SharedRef<VulkanRenderContext> m_renderContext;

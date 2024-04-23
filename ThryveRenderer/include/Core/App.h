@@ -6,6 +6,7 @@
 #include "LayerStack.h"
 #include "Ref.h"
 #include "Renderer/RenderContext.h"
+#include "Window.h"
 
 namespace Thryve::UI {
     class ImGuiLayer;
@@ -32,6 +33,8 @@ namespace Thryve::Core {
         static void SetGraphicsCardName(const std::string& GPUName) {s_AppSpecification.GPU = GPUName;}
         static void SetGraphicsCardType(const std::string& GPUType) {s_AppSpecification.GPUType = GPUType;}
 
+        SharedRef<Rendering::Window> GetWindow() const {return m_window;}
+
         void PushLayer(Layer* layer);
         void PushOverlay(Layer* overlay);
 
@@ -42,6 +45,8 @@ namespace Thryve::Core {
     private:
         static App* s_Instance;
         static AppSpecification s_AppSpecification;
+
+        SharedRef<Rendering::Window> m_window;
 
         void PopulateAppSpecs();
 
