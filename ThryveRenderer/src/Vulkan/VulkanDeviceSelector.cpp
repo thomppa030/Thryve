@@ -161,7 +161,7 @@ SwapChainSupportDetails VulkanDeviceSelector::QuerySwapChainSupport(const VkPhys
 
 bool VulkanDeviceSelector::
 IsDeviceSuitable(VkPhysicalDevice device, const std::vector<const char *> &deviceExtensions) {
-        QueueFamilyIndices indices = FindQueueFamilies(device);
+        m_queueFamiliyIndices = FindQueueFamilies(device);
 
         bool extensionsSupported = CheckDeviceExtensionSupport(device, deviceExtensions);
 
@@ -175,7 +175,7 @@ IsDeviceSuitable(VkPhysicalDevice device, const std::vector<const char *> &devic
         VkPhysicalDeviceFeatures supportedFeatures;
         vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-        return indices.IsComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
+        return m_queueFamiliyIndices.IsComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
 }
 
 bool VulkanDeviceSelector::CheckDeviceExtensionSupport(VkPhysicalDevice device

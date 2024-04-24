@@ -61,7 +61,11 @@ namespace Thryve::UI {
         // 2: initialize imgui library
 
         //this initializes imgui for GLFW
-        ImGui_ImplGlfw_InitForVulkan(static_cast<GLFWwindow*>(Core::App::Get().GetWindow()->GetWindow()), true);
+        bool GLFWImplemented = ImGui_ImplGlfw_InitForVulkan(static_cast<GLFWwindow*>(Core::App::Get().GetWindow()->GetWindow()), true);
+        if (!GLFWImplemented)
+        {
+            throw std::runtime_error("GLFW ImGui Implementation failed!");
+        }
 
         auto* _swapChain = Core::App::Get().GetWindow().As<Rendering::VulkanWindow>()->GetSwapChain();
         //this initializes imgui for Vulkan
@@ -69,14 +73,19 @@ namespace Thryve::UI {
         init_info.Instance = Rendering::VulkanContext::GetInstance();
         init_info.PhysicalDevice = _deviceSelector->GetPhysicalDevice();
         init_info.Device = _deviceSelector->GetLogicalDevice();
+        init_info.QueueFamily = _deviceSelector->GetQueueFamilyIndices().GraphicsFamily.value();
         init_info.Queue = _deviceSelector->GetGraphicsQueue();
         init_info.DescriptorPool = imguiPool;
         init_info.RenderPass = _swapChain->GetRenderPass();
-        init_info.MinImageCount = 3;
-        init_info.ImageCount = 3;
+        init_info.MinImageCount = 2;
+        init_info.ImageCount = _swapChain->GetImageCount();
         init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
-        ImGui_ImplVulkan_Init(&init_info);
+        bool VulkanImplemented = ImGui_ImplVulkan_Init(&init_info);
+        if (!VulkanImplemented)
+        {
+            throw std::runtime_error("Vulkan ImGui Implementation failed!");
+        }
 
         ImGui_ImplVulkan_CreateFontsTexture();
 
@@ -92,10 +101,8 @@ namespace Thryve::UI {
 
     void VulkanImGuiLayer::OnImGuiRender()
     {
-        ImGui::Begin("Hello ImGui!");
-        ImGui::Text("This is some Text in a window!");
-        std::cout << "You are just too slow to see it" << std::endl;
-        ImGui::End();
+        bool p_open = true;
+        ImGui::ShowDemoWindow(&p_open);
     }
     void VulkanImGuiLayer::Begin()
     {
@@ -170,5 +177,13 @@ namespace Thryve::UI {
 		vkCmdEndRenderPass(drawCommandBuffer);
 
 		VK_CALL(vkEndCommandBuffer(drawCommandBuffer));
+
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        // Update and Render additional Platform Windows
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+        }
     }
 } // namespace Thryve::UI

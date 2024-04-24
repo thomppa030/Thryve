@@ -54,6 +54,7 @@ public:
     //TODO Parameter not necessary
     QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device) const;
     SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device) const;
+    const QueueFamilyIndices& GetQueueFamilyIndices() const {return m_queueFamiliyIndices;}
 
 private:
 
@@ -65,6 +66,7 @@ private:
     VkQueue m_graphicsQueue;
     VkQueue m_presentQueue;
     int m_validationLayers{};
+    QueueFamilyIndices m_queueFamiliyIndices;
 
     bool IsDeviceSuitable(VkPhysicalDevice device, const std::vector<const char*>& deviceExtensions);
     bool CheckDeviceExtensionSupport(VkPhysicalDevice device, const std::vector<const char*>& deviceExtensions);
