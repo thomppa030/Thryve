@@ -25,7 +25,8 @@ int main() {
     auto* _coreApp = new Thryve::Core::App();
 
     try {
-        _coreApp->Run();
+        // TODO EEEEWWWWWW Really needs to be changed, is done right now to Also render UI.
+        _coreApp->GetWindow()->GetRenderContext()->Run();
     } catch (const std::runtime_error& e) {
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;

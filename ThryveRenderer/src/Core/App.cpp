@@ -52,6 +52,8 @@ namespace Thryve::Core {
 
     void App::Run()
     {
+
+        // UI Will be Rendered when ImGui_ImplVulkan_RenderDrawData is called every frame
         m_imGuiLayer->Begin();
         for (auto* layer : m_layerStack)
         {
@@ -59,6 +61,6 @@ namespace Thryve::Core {
         }
         m_imGuiLayer->End();
 
-        m_renderContext->Run();
+        // m_renderContext->Run();
     }
 } // namespace Thryve::Core

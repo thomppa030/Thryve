@@ -339,9 +339,13 @@ namespace Thryve::Rendering {
                 VK_CALL(vkResetCommandBuffer(m_commandBuffer, /*VkCommandBufferResetFlagBits*/ 0));
                 RecordCommandBufferSegment(m_commandBuffer, _imageIndex);
 
+
                 if (!m_FrameSynchronizer->SubmitCommandBuffers(&m_commandBuffer, currentFrame, _imageIndex)) {
                     throw std::runtime_error("Failed to submit draw command buffer!");
                 }
+
+                //TODO Hack to get the UI drawn
+                Core::App::Get().Run();
 
                 result = m_swapChain->PresentImage(_imageIndex, _syncObjects.render_finished_semaphore);
                 if (m_swapChain->HandlePresentResult(result)) {
