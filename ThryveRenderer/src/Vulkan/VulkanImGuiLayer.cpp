@@ -128,6 +128,8 @@ namespace Thryve::UI {
 		drawCmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 		drawCmdBufInfo.pNext = nullptr;
 
+        // TODO Needs to be Primamry and Secondary Commandbuffer instead of just one!
+        // This needs a bigger change to the overall Rendering of the Engine, possibly 2 separate renderthreads!
 		VkCommandBuffer drawCommandBuffer = swapChain->GetCommandBuffer();
 		VK_CALL(vkBeginCommandBuffer(drawCommandBuffer, &drawCmdBufInfo));
 

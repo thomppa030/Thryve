@@ -345,12 +345,13 @@ namespace Thryve::Rendering {
                 }
 
                 //TODO Hack to get the UI drawn
-                Core::App::Get().Run();
 
                 result = m_swapChain->PresentImage(_imageIndex, _syncObjects.render_finished_semaphore);
                 if (m_swapChain->HandlePresentResult(result)) {
                     m_swapChain->RecreateSwapChain();
                 }
+
+                Core::App::Get().Run();
 
                 currentFrame = m_FrameSynchronizer->AdvanceFrame(currentFrame);
             }
