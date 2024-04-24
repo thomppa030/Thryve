@@ -164,18 +164,18 @@ void VulkanSwapChain::CreateSwapChain()
 
     // TODO Update Dimensions here?
 
-    uint32_t imageCount = swapChainSupport.Capabilities.minImageCount + 3;
+    m_imageCount = swapChainSupport.Capabilities.minImageCount + 3;
 
-    if (swapChainSupport.Capabilities.maxImageCount > 0 && imageCount > swapChainSupport.Capabilities.maxImageCount)
+    if (swapChainSupport.Capabilities.maxImageCount > 0 && m_imageCount > swapChainSupport.Capabilities.maxImageCount)
     {
-        imageCount = swapChainSupport.Capabilities.maxImageCount;
+        m_imageCount = swapChainSupport.Capabilities.maxImageCount;
     }
 
     VkSwapchainCreateInfoKHR _createInfo{};
     _createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     _createInfo.surface = m_surface;
 
-    _createInfo.minImageCount = imageCount;
+    _createInfo.minImageCount = m_imageCount;
     _createInfo.imageFormat = surfaceFormat.format;
     _createInfo.imageColorSpace = surfaceFormat.colorSpace;
     _createInfo.imageExtent = extent;
@@ -207,9 +207,9 @@ void VulkanSwapChain::CreateSwapChain()
     }
 
     {
-        vkGetSwapchainImagesKHR(_device, m_swapChain, &imageCount, nullptr);
-        m_swapChainImages.resize(imageCount);
-        vkGetSwapchainImagesKHR(_device, m_swapChain, &imageCount, m_swapChainImages.data());
+        vkGetSwapchainImagesKHR(_device, m_swapChain, &m_imageCount, nullptr);
+        m_swapChainImages.resize(m_imageCount);
+        vkGetSwapchainImagesKHR(_device, m_swapChain, &m_imageCount, m_swapChainImages.data());
     }
 
     m_swapChainImageFormat = surfaceFormat.format;

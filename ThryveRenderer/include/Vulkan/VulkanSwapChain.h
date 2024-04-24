@@ -55,6 +55,7 @@ public:
     // Depth Functions
     void CreateDepthResources();
     void CreateImageViews(); // Helper method to create image views for the swap chain images
+    uint32_t GetImageCount() const { return m_imageCount;}
 
     VkRenderPass GetRenderPass() const { return m_renderPass; }
     VkCommandPool GetCommandPool() const { return m_commandPool; }
@@ -80,6 +81,7 @@ private:
     std::vector<VkFramebuffer> m_Framebuffers;
     std::unique_ptr<VulkanRenderPassBuilder> m_renderPassBuilder;
 
+    uint32_t m_imageCount;
     // Additional helper methods for swap chain creation and management
 
     // Utility methods for choosing swap chain surface format, present mode, and extent
