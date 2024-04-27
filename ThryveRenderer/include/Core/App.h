@@ -53,7 +53,7 @@ namespace Thryve::Core {
 
         SharedRef<Rendering::Window> m_window;
 
-        void PopulateAppSpecs();
+        static void PopulateAppSpecs();
 
         UI::ImGuiLayer* m_imGuiLayer;
         LayerStack m_layerStack;

@@ -61,13 +61,9 @@ namespace Thryve::UI {
         // 2: initialize imgui library
 
         //this initializes imgui for GLFW
-        bool GLFWImplemented = ImGui_ImplGlfw_InitForVulkan(static_cast<GLFWwindow*>(Core::App::Get().GetWindow()->GetWindow()), true);
-        if (!GLFWImplemented)
-        {
-            throw std::runtime_error("GLFW ImGui Implementation failed!");
-        }
+        ImGui_ImplGlfw_InitForVulkan(static_cast<GLFWwindow*>(Core::App::Get().GetWindow()->GetWindow()), true);
 
-        auto* _swapChain = Core::App::Get().GetWindow().As<Rendering::VulkanWindow>()->GetSwapChain();
+        auto* _swapChain = &Core::App::Get().GetWindow().As<Rendering::VulkanWindow>()->GetSwapChain();
         //this initializes imgui for Vulkan
         ImGui_ImplVulkan_InitInfo init_info = {};
         init_info.Instance = Rendering::VulkanContext::GetInstance();
@@ -81,11 +77,7 @@ namespace Thryve::UI {
         init_info.ImageCount = _swapChain->GetImageCount();
         init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
-        bool VulkanImplemented = ImGui_ImplVulkan_Init(&init_info);
-        if (!VulkanImplemented)
-        {
-            throw std::runtime_error("Vulkan ImGui Implementation failed!");
-        }
+        ImGui_ImplVulkan_Init(&init_info);
 
         ImGui_ImplVulkan_CreateFontsTexture();
 
@@ -101,6 +93,22 @@ namespace Thryve::UI {
 
     void VulkanImGuiLayer::OnImGuiRender()
     {
+        ImGui::Begin("Main Workspace");
+        ImGui::DockSpace(ImGui::GetID("MyDockSpace"), ImVec2(2160,1440), ImGuiDockNodeFlags_None);
+        ImGui::SetNextWindowDockID(ImGui::GetID("MyDockSpace"), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Viewport");
+        ImGui::SetNextWindowDockID(ImGui::GetID("MyDockSpace"), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Scene Hierarchy");
+        // Contents of Scene Hierarchy
+        ImGui::End();
+
+        ImGui::SetNextWindowDockID(ImGui::GetID("MyDockSpace"), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Properties");
+        // Contents of Properties Panel
+        ImGui::End();
+        ImGui::End(); // End for Viewport
+        ImGui::End(); // End for Main Workspace
+
         bool p_open = true;
         ImGui::ShowDemoWindow(&p_open);
     }
@@ -114,7 +122,7 @@ namespace Thryve::UI {
     {
         ImGui::Render();
 
-        auto swapChain = Core::App::Get().GetWindow().As<Rendering::VulkanWindow>()->GetSwapChain();
+        auto swapChain = &Core::App::Get().GetWindow().As<Rendering::VulkanWindow>()->GetSwapChain();
 
 		VkClearValue clearValues[2];
 		clearValues[0].color = { {0.1f, 0.1f,0.1f, 1.0f} };
@@ -147,34 +155,34 @@ namespace Thryve::UI {
 
 		vkCmdBeginRenderPass(drawCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-		VkCommandBufferInheritanceInfo inheritanceInfo = {};
-		inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-		inheritanceInfo.renderPass = swapChain->GetRenderPass();
-		inheritanceInfo.framebuffer = swapChain->GetCurrentFramebuffer();
+		VkCommandBufferInheritanceInfo _inheritanceInfo = {};
+		_inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+		_inheritanceInfo.renderPass = swapChain->GetRenderPass();
+		_inheritanceInfo.framebuffer = swapChain->GetCurrentFramebuffer();
 
-		VkCommandBufferBeginInfo cmdBufInfo = {};
-		cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
-		cmdBufInfo.pInheritanceInfo = &inheritanceInfo;
+		VkCommandBufferBeginInfo _cmdBufInfo = {};
+		_cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		_cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+		_cmdBufInfo.pInheritanceInfo = &_inheritanceInfo;
 
-		VkViewport viewport = {};
-		viewport.x = 0.0f;
-		viewport.y = (float)height;
-		viewport.height = -(float)height;
-		viewport.width = (float)width;
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(drawCommandBuffer, 0, 1, &viewport);
+		VkViewport _viewport = {};
+		_viewport.x = 0.0f;
+		_viewport.y = static_cast<float>(height);
+		_viewport.height = -static_cast<float>(height);
+		_viewport.width = static_cast<float>(width);
+		_viewport.minDepth = 0.0f;
+		_viewport.maxDepth = 1.0f;
+		vkCmdSetViewport(drawCommandBuffer, 0, 1, &_viewport);
 
-		VkRect2D scissor = {};
-		scissor.extent.width = width;
-		scissor.extent.height = height;
-		scissor.offset.x = 0;
-		scissor.offset.y = 0;
-		vkCmdSetScissor(drawCommandBuffer, 0, 1, &scissor);
+		VkRect2D _scissor = {};
+		_scissor.extent.width = width;
+		_scissor.extent.height = height;
+		_scissor.offset.x = 0;
+		_scissor.offset.y = 0;
+		vkCmdSetScissor(drawCommandBuffer, 0, 1, &_scissor);
 
-		ImDrawData* main_draw_data = ImGui::GetDrawData();
-		ImGui_ImplVulkan_RenderDrawData(main_draw_data, drawCommandBuffer);
+		ImDrawData* _mainDrawData = ImGui::GetDrawData();
+		ImGui_ImplVulkan_RenderDrawData(_mainDrawData, drawCommandBuffer);
 
 		vkCmdEndRenderPass(drawCommandBuffer);
 

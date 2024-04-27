@@ -26,8 +26,7 @@ namespace Thryve::Core {
         PushLayer(m_imGuiLayer);
     }
     App::~App()
-    {
-    }
+    = default;
 
     void App::PopulateAppSpecs()
     {
@@ -55,9 +54,9 @@ namespace Thryve::Core {
 
         // UI Will be Rendered when ImGui_ImplVulkan_RenderDrawData is called every frame
         m_imGuiLayer->Begin();
-        for (auto* layer : m_layerStack)
+        for (auto* _layer : m_layerStack)
         {
-              layer->OnImGuiRender();
+            _layer->OnImGuiRender();
         }
         m_imGuiLayer->End();
 

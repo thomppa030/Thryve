@@ -81,10 +81,10 @@ namespace Thryve::Rendering {
             imageInfo.sampler = m_textureSampler;
 
 
-            VkWriteDescriptorSet bufferWrite = m_descriptorManager->createBufferDescriptorWrite(m_descriptorSets[i], 0, &bufferInfo);
+            VkWriteDescriptorSet _bufferWrite = m_descriptorManager->createBufferDescriptorWrite(m_descriptorSets[i], 0, &bufferInfo);
             VkWriteDescriptorSet imageWrite = m_descriptorManager->createImageDescriptorWrite(m_descriptorSets[i], 1, &imageInfo);
 
-            std::array<VkWriteDescriptorSet, 2> descriptorWrites = {bufferWrite, imageWrite};
+            std::array<VkWriteDescriptorSet, 2> descriptorWrites = {_bufferWrite, imageWrite};
 
             vkUpdateDescriptorSets(m_device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
@@ -92,9 +92,9 @@ namespace Thryve::Rendering {
 
     void VulkanRenderContext::CreateDescriptorSetLayout() {
         //TODO Either Refactor From DescriptorSetManager or make static, needs the Manager instantiated too early at the moment
-        VulkanDescriptor uboDescriptor(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0, VK_SHADER_STAGE_VERTEX_BIT);
-        VulkanDescriptor samplerDescriptor(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
-        m_descriptorManager->CreateDescriptorSetLayout({uboDescriptor, samplerDescriptor});
+        VulkanDescriptor _uboDescriptor(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0, VK_SHADER_STAGE_VERTEX_BIT);
+        VulkanDescriptor _samplerDescriptor(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
+        m_descriptorManager->CreateDescriptorSetLayout({_uboDescriptor, _samplerDescriptor});
         m_descriptorSetLayout = m_descriptorManager->GetDescriptorSetLayout();
     }
 
@@ -120,7 +120,7 @@ namespace Thryve::Rendering {
         PROFILE_FUNCTION();
         PickSuitableDevices();
 
-        m_swapChain = Core::App::Get().GetWindow().As<VulkanWindow>()->GetSwapChain();
+        m_swapChain = &Core::App::Get().GetWindow().As<VulkanWindow>()->GetSwapChain();
         m_renderPass = m_swapChain->GetRenderPass();
 
         m_descriptorPool = CreateDescriptorPool();

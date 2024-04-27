@@ -29,7 +29,7 @@ namespace Thryve::Rendering {
 
         VkSurfaceKHR CreateSurface() const;
 
-        VulkanSwapChain* GetSwapChain() const {return m_swapChain;}
+        VulkanSwapChain& GetSwapChain() const {return *m_swapChain;}
 
     protected:
         void ShutDown() override;
