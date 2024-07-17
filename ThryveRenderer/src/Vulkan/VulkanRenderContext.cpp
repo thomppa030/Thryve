@@ -12,6 +12,7 @@
 #include "tiny_obj_loader.h"
 
 #include "Config.h"
+#include "Core/Camera.h"
 #include "Core/Profiling.h"
 #include "Core/ServiceRegistry.h"
 #include "Vulkan/VulkanContext.h"
@@ -26,6 +27,8 @@
 #include "utils/VulkanBufferUtils.h"
 
 namespace Thryve::Rendering {
+    Thryve::Core::Camera g_Camera(glm::vec3(-2.0f, 10.0f, 32.0f), glm::vec3(0.0f, 5.0f, 5.0f), glm::vec3(0.0f, 0.0f, 1.0f), 0.1f, 50.0f, 16.0f/9.0f);
+
     VulkanRenderContext::VulkanRenderContext(): m_renderPass(nullptr),
                                                 m_commandPool(nullptr){
     }
@@ -131,11 +134,11 @@ namespace Thryve::Rendering {
         AssignCommandBuffer();
         // Stop Refactor
 
-        auto _imagePath = std::string(RESOURCE_DIR) + "/viking_room.png";
+        auto _imagePath = std::string(RESOURCE_DIR) + "/Robot_Albedo_Map_1K.jpg";
         CreateTextureImage(_imagePath);
         CreateTextureImageView();
         CreateTextureSampler();
-        auto _modelPath = std::string(RESOURCE_DIR)+"/viking_room.obj";
+        auto _modelPath = std::string(RESOURCE_DIR)+"/Robot_Model.obj";
         LoadModel(_modelPath);
         CreateVertexBuffer();
         CreateIndexBuffer();
@@ -251,7 +254,7 @@ namespace Thryve::Rendering {
         renderPassInfo.renderArea.extent = m_swapChain->GetSwapchainExtent();
 
         std::array<VkClearValue, 2> _clearValues{};
-        _clearValues[0].color = {{0.3f, 0.3f, 0.3f, 1.0f}};
+        _clearValues[0].color = {{0.02f, 0.02f, 0.02f, 1.0f}};
         _clearValues[1].depthStencil = {1.f, 0};
 
         renderPassInfo.clearValueCount = static_cast<uint32_t>(_clearValues.size());
@@ -299,6 +302,35 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::UpdateUniformBuffer(const uint32_t currentImage) const {
+        static auto startTime = std::chrono::high_resolution_clock::now();
+
+        const auto currentTime = std::chrono::high_resolution_clock::now();
+        const float deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+        // Assuming you have an instance of Camera, for example, m_Camera
+        UniformBufferObject ubo{};
+
+        // Uncomment to add constant Rotation
+        // float rotationAngle = deltaTime * glm::radians(45.0f); // Rotate at 45 degrees per second
+        // ubo.model = glm::rotate(glm::mat4(1.0f), rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
+
+        // Comment out if you want to add rotation
+        // Set the model matrix (if you want to rotate the model over time)
+        ubo.model = glm::rotate(glm::mat4(1.0f), deltaTime * glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        // Get the view matrix from the camera
+        ubo.view = g_Camera.GetViewMatrix();
+
+        // Get the projection matrix from the camera
+        ubo.projection = g_Camera.GetProjectionMatrix();
+
+        // Vulkan clip space has inverted Y and half Z
+        ubo.projection[1][1] *= -1;
+
+        memcpy(m_uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
+    }
+
+    /*void VulkanRenderContext::UpdateUniformBuffer(const uint32_t currentImage) const {
         static auto _startTime = std::chrono::high_resolution_clock::now();
 
         const auto _currentTime = std::chrono::high_resolution_clock::now();
@@ -313,7 +345,8 @@ namespace Thryve::Rendering {
         _ubo.projection[1][1] *= -1;
 
         memcpy(m_uniformBuffersMapped[currentImage], &_ubo, sizeof(_ubo));
-    }
+    }*/
+
 
     void VulkanRenderContext::DrawFrame() {
         PROFILE_FUNCTION()
@@ -339,6 +372,7 @@ namespace Thryve::Rendering {
                 VK_CALL(vkResetCommandBuffer(m_commandBuffer, /*VkCommandBufferResetFlagBits*/ 0));
                 RecordCommandBufferSegment(m_commandBuffer, _imageIndex);
 
+                // Core::App::Get().Run();
 
                 if (!m_FrameSynchronizer->SubmitCommandBuffers(&m_commandBuffer, currentFrame, _imageIndex)) {
                     throw std::runtime_error("Failed to submit draw command buffer!");
@@ -350,8 +384,6 @@ namespace Thryve::Rendering {
                 if (m_swapChain->HandlePresentResult(result)) {
                     m_swapChain->RecreateSwapChain();
                 }
-
-                Core::App::Get().Run();
 
                 currentFrame = m_FrameSynchronizer->AdvanceFrame(currentFrame);
             }
