@@ -30,36 +30,41 @@ namespace Thryve::UI {
 
         ImGui::StyleColorsDark();
         //1: create descriptor pool for IMGUI
-        // the size of the pool is very oversize, but it's copied from imgui demo itself.
-        VkDescriptorPoolSize pool_sizes[] =
+        //   the size of the pool is very oversize, but it's copied from imgui demo itself.
+
+        constexpr int _numElements = 1000;
+        const VkDescriptorPoolSize _poolSizes[] =
         {
-            { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
-            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
-            { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
-            { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
-            { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
-            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
-            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
-            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
-            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
-            { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+            { VK_DESCRIPTOR_TYPE_SAMPLER, _numElements },
+            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, _numElements },
+            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, _numElements },
+            { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, _numElements },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, _numElements },
+            { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, _numElements },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, _numElements },
+            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, _numElements },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, _numElements },
+            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, _numElements },
+            { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, _numElements }
         };
 
         VkDescriptorPoolCreateInfo pool_info = {};
         pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-        pool_info.maxSets = 1000;
-        pool_info.poolSizeCount = std::size(pool_sizes);
-        pool_info.pPoolSizes = pool_sizes;
+        pool_info.maxSets = _numElements * static_cast<uint32_t>(IM_ARRAYSIZE(_poolSizes));
+        pool_info.poolSizeCount = std::size(_poolSizes);
+        pool_info.pPoolSizes = _poolSizes;
 
         auto _deviceSelector = Rendering::VulkanContext::GetCurrentDevice();
-        VkDescriptorPool imguiPool;
-        VK_CALL(vkCreateDescriptorPool(_deviceSelector->GetLogicalDevice(), &pool_info, nullptr, &imguiPool));
+        m_imguiPool = std::make_unique<VulkanDescriptorPool>(_deviceSelector->GetLogicalDevice(), pool_info);
 
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGui::GetIO();
+
+        ImGui::StyleColorsDark();
 
         // 2: initialize imgui library
-
         //this initializes imgui for GLFW
         ImGui_ImplGlfw_InitForVulkan(static_cast<GLFWwindow*>(Core::App::Get().GetWindow()->GetWindow()), true);
 
@@ -71,46 +76,31 @@ namespace Thryve::UI {
         init_info.Device = _deviceSelector->GetLogicalDevice();
         init_info.QueueFamily = _deviceSelector->GetQueueFamilyIndices().GraphicsFamily.value();
         init_info.Queue = _deviceSelector->GetGraphicsQueue();
-        init_info.DescriptorPool = imguiPool;
+        init_info.DescriptorPool = m_imguiPool->Get();
         init_info.RenderPass = _swapChain->GetRenderPass();
         init_info.MinImageCount = 2;
         init_info.ImageCount = _swapChain->GetImageCount();
         init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
-        ImGui_ImplVulkan_Init(&init_info);
+        if (!ImGui_ImplVulkan_Init(&init_info))
+        {
+            vkDestroyDescriptorPool(_deviceSelector->GetLogicalDevice(), m_imguiPool->Get(), nullptr);
+        };
 
         ImGui_ImplVulkan_CreateFontsTexture();
-
-        VK_CALL(vkDeviceWaitIdle(_deviceSelector->GetLogicalDevice()));
-        ImGui_ImplVulkan_DestroyFontsTexture();
     }
 
     void VulkanImGuiLayer::OnDetach()
     {
         ImGui_ImplVulkan_Shutdown();
         ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
     }
 
     void VulkanImGuiLayer::OnImGuiRender()
     {
-        ImGui::Begin("Main Workspace");
-        ImGui::DockSpace(ImGui::GetID("MyDockSpace"), ImVec2(2160,1440), ImGuiDockNodeFlags_None);
-        ImGui::SetNextWindowDockID(ImGui::GetID("MyDockSpace"), ImGuiCond_FirstUseEver);
-        ImGui::Begin("Viewport");
-        ImGui::SetNextWindowDockID(ImGui::GetID("MyDockSpace"), ImGuiCond_FirstUseEver);
-        ImGui::Begin("Scene Hierarchy");
-        // Contents of Scene Hierarchy
-        ImGui::End();
-
-        ImGui::SetNextWindowDockID(ImGui::GetID("MyDockSpace"), ImGuiCond_FirstUseEver);
-        ImGui::Begin("Properties");
-        // Contents of Properties Panel
-        ImGui::End();
-        ImGui::End(); // End for Viewport
-        ImGui::End(); // End for Main Workspace
-
-        bool p_open = true;
-        ImGui::ShowDemoWindow(&p_open);
+        bool _pOpen = true;
+        ImGui::ShowDemoWindow(&_pOpen);
     }
     void VulkanImGuiLayer::Begin()
     {
@@ -120,76 +110,67 @@ namespace Thryve::UI {
     }
     void VulkanImGuiLayer::End()
     {
+        ImGui::EndFrame();
         ImGui::Render();
 
         auto swapChain = &Core::App::Get().GetWindow().As<Rendering::VulkanWindow>()->GetSwapChain();
+        auto _deviceSelector = Rendering::VulkanContext::GetCurrentDevice();
+        VulkanCommandBuffer commandBuffer(_deviceSelector->GetLogicalDevice(), swapChain->GetCommandPool());
 
-		VkClearValue clearValues[2];
-		clearValues[0].color = { {0.1f, 0.1f,0.1f, 1.0f} };
-		clearValues[1].depthStencil = { 1.0f, 0 };
+        VkClearValue clearValues[2];
+        clearValues[0].color = {{0.1f, 0.1f, 0.1f, 1.0f}};
+        clearValues[1].depthStencil = {1.0f, 0};
 
-		uint32_t width = swapChain->GetSwapchainExtent().width;
-		uint32_t height = swapChain->GetSwapchainExtent().height;
+        uint32_t width = swapChain->GetSwapchainExtent().width;
+        uint32_t height = swapChain->GetSwapchainExtent().height;
 
-		VkCommandBufferBeginInfo drawCmdBufInfo = {};
-		drawCmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		drawCmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-		drawCmdBufInfo.pNext = nullptr;
+        VkCommandBuffer drawCommandBuffer = commandBuffer.Get();
+        VkCommandBufferBeginInfo drawCmdBufInfo = {};
+        drawCmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        drawCmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-        // TODO Needs to be Primamry and Secondary Commandbuffer instead of just one!
-        // This needs a bigger change to the overall Rendering of the Engine, possibly 2 separate renderthreads!
-		VkCommandBuffer drawCommandBuffer = swapChain->GetCommandBuffer();
-		VK_CALL(vkBeginCommandBuffer(drawCommandBuffer, &drawCmdBufInfo));
+        if (VK_CALL(vkBeginCommandBuffer(drawCommandBuffer, &drawCmdBufInfo)) != VK_SUCCESS)
+        {
+            throw std::runtime_error("Failed to begin recording command buffer!");
+        }
 
-		VkRenderPassBeginInfo renderPassBeginInfo = {};
-		renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassBeginInfo.pNext = nullptr;
-		renderPassBeginInfo.renderPass = swapChain->GetRenderPass();
-		renderPassBeginInfo.renderArea.offset.x = 0;
-		renderPassBeginInfo.renderArea.offset.y = 0;
-		renderPassBeginInfo.renderArea.extent.width = width;
-		renderPassBeginInfo.renderArea.extent.height = height;
-		renderPassBeginInfo.clearValueCount = 2; // Color + depth
-		renderPassBeginInfo.pClearValues = clearValues;
-		renderPassBeginInfo.framebuffer = swapChain->GetCurrentFramebuffer();
+        VkRenderPassBeginInfo renderPassBeginInfo = {};
+        renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassBeginInfo.renderPass = swapChain->GetRenderPass();
+        renderPassBeginInfo.framebuffer = swapChain->GetCurrentFramebuffer();
+        renderPassBeginInfo.renderArea = {{0, 0}, {width, height}};
+        renderPassBeginInfo.clearValueCount = 2;
+        renderPassBeginInfo.pClearValues = clearValues;
 
-		vkCmdBeginRenderPass(drawCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBeginRenderPass(drawCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-		VkCommandBufferInheritanceInfo _inheritanceInfo = {};
-		_inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-		_inheritanceInfo.renderPass = swapChain->GetRenderPass();
-		_inheritanceInfo.framebuffer = swapChain->GetCurrentFramebuffer();
+        VkViewport viewport = {};
+        viewport.x = 0.0f;
+        viewport.y = static_cast<float>(height);
+        viewport.height = -static_cast<float>(height);
+        viewport.width = static_cast<float>(width);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(drawCommandBuffer, 0, 1, &viewport);
 
-		VkCommandBufferBeginInfo _cmdBufInfo = {};
-		_cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		_cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
-		_cmdBufInfo.pInheritanceInfo = &_inheritanceInfo;
+        VkRect2D scissor = {};
+        scissor.extent.width = width;
+        scissor.extent.height = height;
+        scissor.offset = {0, 0};
+        vkCmdSetScissor(drawCommandBuffer, 0, 1, &scissor);
 
-		VkViewport _viewport = {};
-		_viewport.x = 0.0f;
-		_viewport.y = static_cast<float>(height);
-		_viewport.height = -static_cast<float>(height);
-		_viewport.width = static_cast<float>(width);
-		_viewport.minDepth = 0.0f;
-		_viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(drawCommandBuffer, 0, 1, &_viewport);
+        ImDrawData* drawData = ImGui::GetDrawData();
+        ImGui_ImplVulkan_RenderDrawData(drawData, drawCommandBuffer);
 
-		VkRect2D _scissor = {};
-		_scissor.extent.width = width;
-		_scissor.extent.height = height;
-		_scissor.offset.x = 0;
-		_scissor.offset.y = 0;
-		vkCmdSetScissor(drawCommandBuffer, 0, 1, &_scissor);
+        vkCmdEndRenderPass(drawCommandBuffer);
 
-		ImDrawData* _mainDrawData = ImGui::GetDrawData();
-		ImGui_ImplVulkan_RenderDrawData(_mainDrawData, drawCommandBuffer);
+        if (VK_CALL(vkEndCommandBuffer(drawCommandBuffer)) != VK_SUCCESS)
+        {
+            throw std::runtime_error("Failed to record command buffer!");
+        }
 
-		vkCmdEndRenderPass(drawCommandBuffer);
-
-		VK_CALL(vkEndCommandBuffer(drawCommandBuffer));
-
-        ImGuiIO& io = ImGui::GetIO(); (void)io;
-        // Update and Render additional Platform Windows
+        ImGuiIO& io = ImGui::GetIO();
+        (void)io;
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
             ImGui::UpdatePlatformWindows();
