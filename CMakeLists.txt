@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.27)
+cmake_minimum_required(VERSION 3.5)
 project(Thryve)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -22,11 +22,13 @@ add_subdirectory(external/glfw)
 add_subdirectory(external/spdlog)
 add_subdirectory(external/json)
 add_subdirectory(external/enkiTS)
+add_subdirectory(external/Volk)
 
 include_directories(external/spdlog/include)
 include_directories(external/glfw/include)
 include_directories(external/json/include)
 include_directories(external/enkiTS/src)
+include_directories(external/Volk)
 
 
 add_subdirectory(ThryveRenderer)

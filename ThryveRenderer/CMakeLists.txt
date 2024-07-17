@@ -21,12 +21,17 @@ add_library(ThryveRenderer
         src/imGui/imGuiLayer.cpp
         include/imGui/imGuiLayer.h
         src/Vulkan/VulkanImGuiLayer.cpp
-        include/Vulkan/VulkanImGuiLayer.h)
+        include/Vulkan/VulkanImGuiLayer.h
+        src/Core/Camera.cpp
+        include/Core/Camera.h
+        include/Vulkan/VulkanCommandQueueManager.cpp
+        include/Vulkan/VulkanCommandQueueManager.h
+        include/Vulkan/VulkanBuffer.cpp
+        include/Vulkan/VulkanBuffer.h)
 
 # Precompiled header
 set(PRECOMPILE_HEADER "include/pch.h")
 target_precompile_headers(ThryveRenderer PRIVATE ${PRECOMPILE_HEADER})
-
 
 # Include directories for the ThryveRenderer target
 target_include_directories(ThryveRenderer
@@ -35,10 +40,9 @@ target_include_directories(ThryveRenderer
         $<INSTALL_INTERFACE:include>
         PRIVATE
         ${Vulkan_INCLUDE_DIRS}
-        external/glm
-        external/stb
-        external/tinyobjloader
-        external/VulkanMemoryAllocator/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/external/stb
+        ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyobjloader
+        ${CMAKE_CURRENT_SOURCE_DIR}/external/VulkanMemoryAllocator/include
 )
 
 # Source and header files for the ThryveRenderer target
@@ -52,20 +56,14 @@ target_sources(ThryveRenderer PRIVATE ${SOURCES} ${HEADERS})
 target_link_libraries(ThryveRenderer
         PRIVATE
         glfw
-        glm::glm
         spdlog::spdlog
         VulkanMemoryAllocator
+        glm
 )
 
 # Add external dependencies as subdirectories
-add_subdirectory(external/glm)
 add_subdirectory(external/VulkanMemoryAllocator)
+add_subdirectory(external/glm)
 
-
-# Catch2 is header-only; consider using FetchContent or add it to the target_include_directories where it's used.
-# If Catch2 is used for testing, you might want to conditionally include it:
-# if(THRYVE_BUILD_TESTS)
-#     include_directories(external/Catch2/single_include)
-# endif()
-
-# ... Rest of your CMake code for installing, testing, etc.
+# Add necessary GLM definitions
+target_compile_definitions(ThryveRenderer PRIVATE GLM_FORCE_INLINE GLM_ENABLE_EXPERIMENTAL GLM_FORCE_ALIGNED_GENTYPES)
