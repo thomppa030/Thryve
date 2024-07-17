@@ -52,7 +52,7 @@ namespace Thryve::Rendering {
         poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
         // Image samplers
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * 4);
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -78,44 +78,96 @@ namespace Thryve::Rendering {
             bufferInfo.offset = 0;
             bufferInfo.range = sizeof(UniformBufferObject);
 
-            VkDescriptorImageInfo imageInfo{};
-            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.imageView = m_textureImageView;
-            imageInfo.sampler = m_textureSampler;
+            VkDescriptorImageInfo albedoImageInfo{};
+            albedoImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            albedoImageInfo.imageView = m_AlbedoImageView;
+            albedoImageInfo.sampler = m_AlbedoSampler;
 
+            VkDescriptorImageInfo metallicImageInfo{};
+            metallicImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            metallicImageInfo.imageView = m_MetallicImageView;
+            metallicImageInfo.sampler = m_MetallicSampler;
+
+            VkDescriptorImageInfo normalImageInfo{};
+            normalImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            normalImageInfo.imageView = m_NormalImageView;
+            normalImageInfo.sampler = m_NormalSampler;
+
+            VkDescriptorImageInfo emmissionImageInfo{};
+            emmissionImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            emmissionImageInfo.imageView = m_EmmissionImageView;
+            emmissionImageInfo.sampler = m_EmmissionSampler;
 
             VkWriteDescriptorSet _bufferWrite = m_descriptorManager->createBufferDescriptorWrite(m_descriptorSets[i], 0, &bufferInfo);
-            VkWriteDescriptorSet imageWrite = m_descriptorManager->createImageDescriptorWrite(m_descriptorSets[i], 1, &imageInfo);
+            VkWriteDescriptorSet _albedoImageWrite = m_descriptorManager->createImageDescriptorWrite(m_descriptorSets[i], 1, &albedoImageInfo);
+            VkWriteDescriptorSet _metallicImageWrite = m_descriptorManager->createImageDescriptorWrite(m_descriptorSets[i], 2, &metallicImageInfo);
+            VkWriteDescriptorSet _normalImageWrite = m_descriptorManager->createImageDescriptorWrite(m_descriptorSets[i], 3, &normalImageInfo);
+            VkWriteDescriptorSet _emmissionImageWrite = m_descriptorManager->createImageDescriptorWrite(m_descriptorSets[i], 4, &emmissionImageInfo);
 
-            std::array<VkWriteDescriptorSet, 2> descriptorWrites = {_bufferWrite, imageWrite};
+            std::array<VkWriteDescriptorSet, 5> _descriptorWrites = {_bufferWrite, _albedoImageWrite, _metallicImageWrite, _normalImageWrite, _emmissionImageWrite};
 
-            vkUpdateDescriptorSets(m_device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+            vkUpdateDescriptorSets(m_device, static_cast<uint32_t>(_descriptorWrites.size()), _descriptorWrites.data(), 0, nullptr);
         }
     }
 
     void VulkanRenderContext::CreateDescriptorSetLayout() {
         //TODO Either Refactor From DescriptorSetManager or make static, needs the Manager instantiated too early at the moment
         VulkanDescriptor _uboDescriptor(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0, VK_SHADER_STAGE_VERTEX_BIT);
-        VulkanDescriptor _samplerDescriptor(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
-        m_descriptorManager->CreateDescriptorSetLayout({_uboDescriptor, _samplerDescriptor});
+        VulkanDescriptor _albedoDescriptor(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,1, VK_SHADER_STAGE_FRAGMENT_BIT);
+        VulkanDescriptor _metallicDescriptor(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,2, VK_SHADER_STAGE_FRAGMENT_BIT);
+        VulkanDescriptor _normalDescriptor(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,3, VK_SHADER_STAGE_FRAGMENT_BIT);
+        VulkanDescriptor _emmissionDescriptor(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,4, VK_SHADER_STAGE_FRAGMENT_BIT);
+
+        m_descriptorManager->CreateDescriptorSetLayout({_uboDescriptor, _albedoDescriptor, _metallicDescriptor, _normalDescriptor, _emmissionDescriptor});
         m_descriptorSetLayout = m_descriptorManager->GetDescriptorSetLayout();
     }
 
-    void VulkanRenderContext::CreateTextureImage(const std::string &path) {
-        m_VulkanTextureImage =
+    void VulkanRenderContext::CreateTextureImage(const std::string& albedoPath, const std::string& metallicPath,
+                                                 const std::string& normalPath, const std::string& emmissionPath) {
+        m_AlbedoTextureImage =
             std::make_unique<VulkanTextureImage>(m_swapChain->GetCommandPool(), m_commandBuffer);
-        m_VulkanTextureImage->createTextureImage(path);
-        m_textureImage = m_VulkanTextureImage->GetTextureImage();
+        m_AlbedoTextureImage->createTextureImage(albedoPath);
+        m_albedoImage = m_AlbedoTextureImage->GetTextureImage();
+
+        m_MetallicTextureImage = std::make_unique<VulkanTextureImage>(m_swapChain->GetCommandPool(), m_commandBuffer);
+        m_MetallicTextureImage->createTextureImage(metallicPath);
+        m_metallicImage = m_MetallicTextureImage->GetTextureImage();
+
+        m_NormalTextureImage = std::make_unique<VulkanTextureImage>(m_swapChain->GetCommandPool(), m_commandBuffer);
+        m_NormalTextureImage->createTextureImage(normalPath);
+        m_normalImage = m_NormalTextureImage->GetTextureImage();
+
+        m_EmmissionTextureImage = std::make_unique<VulkanTextureImage>(m_swapChain->GetCommandPool(), m_commandBuffer);
+        m_EmmissionTextureImage->createTextureImage(emmissionPath);
+        m_EmmissionImage = m_EmmissionTextureImage->GetTextureImage();
     }
 
     void VulkanRenderContext::CreateTextureImageView() {
-        m_VulkanTextureImage->createTextureImageView();
-        m_textureImageView = m_VulkanTextureImage->GetTextureImageView();
+        m_AlbedoTextureImage->createTextureImageView();
+        m_AlbedoImageView = m_AlbedoTextureImage->GetTextureImageView();
+
+        m_MetallicTextureImage->createTextureImageView();
+        m_MetallicImageView = m_MetallicTextureImage->GetTextureImageView();
+
+        m_NormalTextureImage->createTextureImageView();
+        m_NormalImageView = m_NormalTextureImage->GetTextureImageView();
+
+        m_EmmissionTextureImage->createTextureImageView();
+        m_EmmissionImageView = m_EmmissionTextureImage->GetTextureImageView();
     }
 
     void VulkanRenderContext::CreateTextureSampler() {
-        m_VulkanTextureImage->createTextureSampler();
-        m_textureSampler = m_VulkanTextureImage->GetTextureSampler();
+        m_AlbedoTextureImage->createTextureSampler();
+        m_AlbedoSampler = m_AlbedoTextureImage->GetTextureSampler();
+
+        m_MetallicTextureImage->createTextureSampler();
+        m_MetallicSampler = m_MetallicTextureImage->GetTextureSampler();
+
+        m_NormalTextureImage->createTextureSampler();
+        m_NormalSampler = m_NormalTextureImage->GetTextureSampler();
+
+        m_EmmissionTextureImage->createTextureSampler();
+        m_EmmissionSampler = m_EmmissionTextureImage->GetTextureSampler();
     }
 
     void VulkanRenderContext::InitVulkan()
@@ -134,8 +186,12 @@ namespace Thryve::Rendering {
         AssignCommandBuffer();
         // Stop Refactor
 
-        auto _imagePath = std::string(RESOURCE_DIR) + "/Robot_Albedo_Map_1K.jpg";
-        CreateTextureImage(_imagePath);
+        auto _albedoPath = std::string(RESOURCE_DIR) + "/Robot_Albedo_Map_1K.jpg";
+        auto _metallicPath = std::string(RESOURCE_DIR) + "/Robot_Metallic_Map.jpeg";
+        auto _normalPath = std::string(RESOURCE_DIR) + "/Robot_Normal_Map_1K.jpg";
+        auto _emmissionPath = std::string(RESOURCE_DIR) + "/Robot_Emmission_Map.jpeg";
+
+        CreateTextureImage(_albedoPath, _metallicPath, _normalPath, _emmissionPath);
         CreateTextureImageView();
         CreateTextureSampler();
         auto _modelPath = std::string(RESOURCE_DIR)+"/Robot_Model.obj";
@@ -179,7 +235,10 @@ namespace Thryve::Rendering {
 
         vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
 
-        m_VulkanTextureImage.reset();
+        m_AlbedoTextureImage.reset();
+        m_MetallicTextureImage.reset();
+        m_NormalTextureImage.reset();
+        m_EmmissionTextureImage.reset();
 
         vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
     }
@@ -237,64 +296,64 @@ namespace Thryve::Rendering {
     }
 
     void VulkanRenderContext::RecordCommandBufferSegment(VkCommandBuffer commandBuffer, const uint32_t imageIndex) {
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-        VK_CALL(vkBeginCommandBuffer(commandBuffer, &beginInfo));
-        Core::App::Get().SetCurrentImageIndex(imageIndex);
-        const auto framebuffers = m_swapChain->GetFrameBuffers();
-        m_renderPass = m_swapChain->GetRenderPass();
+    VK_CALL(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = m_renderPass;
-        renderPassInfo.framebuffer = framebuffers[imageIndex];
-        renderPassInfo.renderArea.offset = {0, 0};
-        renderPassInfo.renderArea.extent = m_swapChain->GetSwapchainExtent();
+    Core::App::Get().SetCurrentImageIndex(imageIndex);
+    const auto framebuffers = m_swapChain->GetFrameBuffers();
+    m_renderPass = m_swapChain->GetRenderPass();
 
-        std::array<VkClearValue, 2> _clearValues{};
-        _clearValues[0].color = {{0.02f, 0.02f, 0.02f, 1.0f}};
-        _clearValues[1].depthStencil = {1.f, 0};
+    VkRenderPassBeginInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = m_renderPass;
+    renderPassInfo.framebuffer = framebuffers[imageIndex];
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = m_swapChain->GetSwapchainExtent();
 
-        renderPassInfo.clearValueCount = static_cast<uint32_t>(_clearValues.size());
-        renderPassInfo.pClearValues = _clearValues.data();
+    std::array<VkClearValue, 2> clearValues{};
+    clearValues[0].color = {{0.02f, 0.02f, 0.02f, 1.0f}};
+    clearValues[1].depthStencil = {1.f, 0};
 
-        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    renderPassInfo.pClearValues = clearValues.data();
 
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetPipeline());
+    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = static_cast<float>(m_swapChain->GetSwapchainExtent().width);
-        viewport.height = static_cast<float>(m_swapChain->GetSwapchainExtent().height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetPipeline());
 
-        VkRect2D scissor{};
-        scissor.offset = {0, 0};
-        scissor.extent = m_swapChain->GetSwapchainExtent();
-        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(m_swapChain->GetSwapchainExtent().width);
+    viewport.height = static_cast<float>(m_swapChain->GetSwapchainExtent().height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-        if (m_vulkanVertexBuffer) {
-            m_vulkanVertexBuffer->Bind(commandBuffer);
-        }
+    VkRect2D scissor{};
+    scissor.offset = {0, 0};
+    scissor.extent = m_swapChain->GetSwapchainExtent();
+    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-        if (m_indexBuffer) {
-            m_indexBuffer->Bind(commandBuffer);
-            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetPipelineLayout(), 0, 1, &m_descriptorSets[currentFrame], 0, nullptr);
-            m_indexBuffer->Draw(commandBuffer);
-        }
-        else {
-            m_vulkanVertexBuffer->Draw(commandBuffer);
-        }
-
-        vkCmdEndRenderPass(commandBuffer);
-
-        VK_CALL(vkEndCommandBuffer(commandBuffer));
+    if (m_vulkanVertexBuffer) {
+        m_vulkanVertexBuffer->Bind(commandBuffer);
     }
+
+    if (m_indexBuffer) {
+        m_indexBuffer->Bind(commandBuffer);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetPipelineLayout(), 0, 1, &m_descriptorSets[currentFrame], 0, nullptr);
+        m_indexBuffer->Draw(commandBuffer);
+    } else {
+        m_vulkanVertexBuffer->Draw(commandBuffer);
+    }
+
+    vkCmdEndRenderPass(commandBuffer);
+
+    VK_CALL(vkEndCommandBuffer(commandBuffer));
+}
 
     void VulkanRenderContext::CreateSyncObjects() {
         PROFILE_FUNCTION();
@@ -311,12 +370,12 @@ namespace Thryve::Rendering {
         UniformBufferObject ubo{};
 
         // Uncomment to add constant Rotation
-        // float rotationAngle = deltaTime * glm::radians(45.0f); // Rotate at 45 degrees per second
-        // ubo.model = glm::rotate(glm::mat4(1.0f), rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
+        float rotationAngle = deltaTime * glm::radians(45.0f); // Rotate at 45 degrees per second
+        ubo.model = glm::rotate(glm::mat4(1.0f), rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
 
         // Comment out if you want to add rotation
         // Set the model matrix (if you want to rotate the model over time)
-        ubo.model = glm::rotate(glm::mat4(1.0f), deltaTime * glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        // ubo.model = glm::rotate(glm::mat4(1.0f), deltaTime * glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
         // Get the view matrix from the camera
         ubo.view = g_Camera.GetViewMatrix();
@@ -397,44 +456,70 @@ namespace Thryve::Rendering {
         Cleanup();
     }
 
-    void VulkanRenderContext::LoadModel(const std::string& path)
-    {
-        PROFILE_FUNCTION()
-        tinyobj::attrib_t _attrib;
+  void VulkanRenderContext::LoadModel(const std::string& path)
+{
+    PROFILE_FUNCTION()
+    tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+    std::string err, warn;
 
-        std::vector<tinyobj::shape_t> _shapes;
-        std::vector<tinyobj::material_t> _materials;
-        std::string _err, _warn;
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str())) {
+        throw std::runtime_error(warn + err);
+    }
 
+    for (const auto& shape : shapes) {
+        for (size_t i = 0; i < shape.mesh.indices.size(); i += 3) {
+            std::array<Vertex3D, 3> vertices;
+            for (size_t j = 0; j < 3; j++) {
+                tinyobj::index_t idx = shape.mesh.indices[i + j];
 
-        if (!tinyobj::LoadObj(&_attrib, &_shapes, &_materials, &_warn, &_err, path.c_str()))
-        {
-            throw std::runtime_error(_warn + _err);
-        }
-
-        for (const auto& _shape : _shapes)
-        {
-            for (const auto& _index : _shape.mesh.indices)
-            {
-                Vertex3D _vertex{};
-
-                _vertex.pos = {
-                    _attrib.vertices[3 * _index.vertex_index + 0],
-                    _attrib.vertices[3 * _index.vertex_index + 1],
-                    _attrib.vertices[3 * _index.vertex_index + 2]
+                vertices[j].pos = {
+                    attrib.vertices[3 * idx.vertex_index + 0],
+                    attrib.vertices[3 * idx.vertex_index + 1],
+                    attrib.vertices[3 * idx.vertex_index + 2]
                 };
 
-                _vertex.texCoord = {
-                    _attrib.texcoords[2 * _index.texcoord_index + 0],
-                    1.0f - _attrib.texcoords[2 * _index.texcoord_index + 1]
+                vertices[j].texCoord = {
+                    attrib.texcoords[2 * idx.texcoord_index + 0],
+                    1.0f - attrib.texcoords[2 * idx.texcoord_index + 1]
                 };
 
-                _vertex.normal = {1.0f, 1.0f, 1.0f};
+                vertices[j].normal = {
+                    attrib.normals[3 * idx.normal_index + 0],
+                    attrib.normals[3 * idx.normal_index + 1],
+                    attrib.normals[3 * idx.normal_index + 2]
+                };
+            }
 
-                ModelVertices.push_back(_vertex);
-                ModelIndices.push_back(ModelIndices.size());
+            // Calculate tangents and bitangents
+            glm::vec3 edge1 = vertices[1].pos - vertices[0].pos;
+            glm::vec3 edge2 = vertices[2].pos - vertices[0].pos;
+            glm::vec2 deltaUV1 = vertices[1].texCoord - vertices[0].texCoord;
+            glm::vec2 deltaUV2 = vertices[2].texCoord - vertices[0].texCoord;
+
+            float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+            glm::vec3 tangent;
+            tangent.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+            tangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+            tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+
+            glm::vec3 bitangent;
+            bitangent.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+            bitangent.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+            bitangent.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+
+            for (size_t j = 0; j < 3; j++) {
+                vertices[j].tangent = tangent;
+                vertices[j].bitangent = bitangent;
+
+                ModelVertices.push_back(vertices[j]);
+                ModelIndices.push_back(static_cast<uint32_t>(ModelVertices.size() - 1));
             }
         }
     }
+}
+
 
 } // namespace Thryve::Rendering

@@ -25,17 +25,17 @@ constexpr uint32_t HEIGHT = 1080;
 
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
-const std::vector<Vertex3D> VERTICES_3D = {
-    {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f},{1.0f, 0.0f}},
-    {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f},{0.0f,0.0f}},
-    {{0.5f, 0.5f,0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f,1.0f}},
-    {{-0.5f, 0.5f,0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f,1.0f}},
-
-    {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f},{1.0f, 0.0f}},
-    {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f},{0.0f,0.0f}},
-    {{0.5f, 0.5f,-0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f,1.0f}},
-    {{-0.5f, 0.5f,-0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f,1.0f}},
-};
+// const std::vector<Vertex3D> VERTICES_3D = {
+//     {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f},{1.0f, 0.0f}},
+//     {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f},{0.0f,0.0f}},
+//     {{0.5f, 0.5f,0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f,1.0f}},
+//     {{-0.5f, 0.5f,0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f,1.0f}},
+//
+//     {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f},{1.0f, 0.0f}},
+//     {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f},{0.0f,0.0f}},
+//     {{0.5f, 0.5f,-0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f,1.0f}},
+//     {{-0.5f, 0.5f,-0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f,1.0f}},
+// };
 
 const std::vector<Vertex2D> VERTICES_2D = {
     {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f},{1.0f, 0.0f}},
@@ -103,10 +103,23 @@ namespace Thryve::Rendering
         uint32_t currentFrame = 0;
 
         //Texture Creation
-        std::unique_ptr<VulkanTextureImage> m_VulkanTextureImage;
-        VkImage m_textureImage;
-        VkImageView m_textureImageView;
-        VkSampler m_textureSampler;
+        std::unique_ptr<VulkanTextureImage> m_AlbedoTextureImage;
+        std::unique_ptr<VulkanTextureImage> m_MetallicTextureImage;
+        std::unique_ptr<VulkanTextureImage> m_NormalTextureImage;
+        std::unique_ptr<VulkanTextureImage> m_EmmissionTextureImage;
+        VkImage m_albedoImage;
+        VkImage m_metallicImage;
+        VkImage m_normalImage;
+        VkImage m_EmmissionImage;
+
+        VkImageView m_AlbedoImageView;
+        VkSampler m_AlbedoSampler;
+        VkImageView m_MetallicImageView;
+        VkSampler m_MetallicSampler;
+        VkImageView m_NormalImageView;
+        VkSampler m_NormalSampler;
+        VkImageView m_EmmissionImageView;
+        VkSampler m_EmmissionSampler;
 
 
         void InitVulkan();
@@ -118,7 +131,7 @@ namespace Thryve::Rendering
         void CreateIndexBuffer();
         void CreateUniformBuffer();
         void CreateDescriptorSetLayout();
-        void CreateTextureImage(const std::string &path);
+        void CreateTextureImage(const std::string &albedoPath, const std::string &metallicPath, const std::string &normalPath, const std::string &emmissionPath);
         void CreateTextureImageView();
         void CreateTextureSampler();
         [[nodiscard]] VkDescriptorPool CreateDescriptorPool() const;

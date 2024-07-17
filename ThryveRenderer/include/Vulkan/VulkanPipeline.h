@@ -83,6 +83,8 @@ struct PipelineConfigInfo {
         vertexInput.attributes[0] = {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex3D, pos)};
         vertexInput.attributes[1] = {1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex3D, normal)};
         vertexInput.attributes[2] = {2, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex3D, texCoord)};
+        vertexInput.attributes[3] = {3, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex3D, tangent)};
+        vertexInput.attributes[4] = {4, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex3D, bitangent)};
     }
 
     void EnableDefaultDepthTesting() {
